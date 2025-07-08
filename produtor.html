@@ -20,7 +20,7 @@
     <main class="px-6 md:px-20 py-12 space-y-12">
       <!-- Clima Local -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
-        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 100-8 4 4 0 000 8zm0 0v6m0-6a4 4 0 110 8h18"></path></svg> Previsão do Tempo</h2>
+        <h2 class="text-2xl font-semibold mb-4">Previsão do Tempo</h2>
         <div id="weather" class="text-gray-700 space-y-4">
           <div id="weather-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando previsão...</div>
         </div>
@@ -28,20 +28,20 @@
 
       <!-- Commodities -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
-        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4m8 0c0-2.21-1.79-4-4-4m0 8c2.21 0 4-1.79 4-4m-8 0c0 2.21 1.79 4 4 4"></path></svg> Cotações de Commodities</h2>
+        <h2 class="text-2xl font-semibold mb-4">Cotações de Commodities (R$)</h2>
         <div id="commodities" class="text-gray-700">
           <div id="commodities-loading" class="flex items-center gap-2"><span class="loader"></span> Buscando cotações...</div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">Fonte: Yahoo Finance (dados em tempo real).</p>
+        <p class="text-xs text-gray-500 mt-2">Valores aproximados com base no câmbio comercial. Fonte: Alpha Vantage.</p>
       </section>
 
       <!-- Notícias Agrícolas -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
-        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7z" /></svg> Notícias do Setor Agrícola</h2>
+        <h2 class="text-2xl font-semibold mb-4">Notícias do Setor Agrícola</h2>
         <div id="news" class="space-y-2 text-gray-700">
           <div id="news-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando notícias...</div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">Fonte: InfoMoney & Investing RSS.</p>
+        <p class="text-xs text-gray-500 mt-2">Fontes: InfoMoney & Investing RSS.</p>
       </section>
     </main>
 
@@ -51,9 +51,9 @@
 
     <script>
       const fetchJSON = url => fetch(url).then(r => r.json());
+      const ALPHA_VANTAGE_KEY = '5TDXOCJ21L6A7P4Z';
 
-      // ===== WEATHER =====
-      function loadWeather(){
+      async function loadWeather(){
         if(!navigator.geolocation){document.getElementById('weather').innerHTML='<p>Geolocalização não suportada.</p>';return;}
         navigator.geolocation.getCurrentPosition(async pos=>{
           const {latitude,longitude}=pos.coords;
@@ -64,28 +64,46 @@
             const cw=data.current_weather;
             const currentHTML=`<p class="text-xl"><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode]||'Condição desconhecida'}</p><p class="text-gray-600 text-sm">Atualizado: ${new Date(cw.time).toLocaleString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>`;
             const dailyRows=data.daily.time.map((date,i)=>{
-              const d=new Date(date);const day=d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
-              return `<tr><td class="pr-4">${day}</td><td>${codes[data.daily.weathercode[i]]||'-'}</td><td>${data.daily.temperature_2m_min[i]}°C / ${data.daily.temperature_2m_max[i]}°C</td></tr>`;
+              const d=new Date(date);
+              const day=d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+              return `<tr><td class="py-1 pr-4">${day}</td><td class="py-1">${codes[data.daily.weathercode[i]]||'-'}</td><td class="py-1">${data.daily.temperature_2m_min[i]}°C / ${data.daily.temperature_2m_max[i]}°C</td></tr>`;
             }).join('');
-            const table=`<table class="text-sm mt-4"><tbody>${dailyRows}</tbody></table>`;
+            const table=`<table class="text-sm mt-4"><thead><tr><th class="text-left">Dia</th><th class="text-left">Condição</th><th class="text-left">Temperatura</th></tr></thead><tbody>${dailyRows}</tbody></table>`;
             document.getElementById('weather').innerHTML=currentHTML+table;
           }catch(e){document.getElementById('weather').innerHTML='<p>Erro ao carregar clima.</p>';}
         },()=>{document.getElementById('weather').innerHTML='<p>Permita localização para ver o clima.</p>';});
       }
 
-      // ===== COMMODITIES (Yahoo Finance) =====
       async function loadCommodities(){
         try{
-          const url='https://query1.finance.yahoo.com/v7/finance/quote?symbols=KC=F,ZS=F,ZC=F';
-          const data=await fetchJSON(url);
-          const res=data.quoteResponse.result;
-          const map={'KC=F':'Café (ICE)','ZS=F':'Soja (CBOT)','ZC=F':'Milho (CBOT)'};
-          const html=res.map(r=>`<li><strong>${map[r.symbol]}:</strong> US$ ${r.regularMarketPrice.toFixed(2)}</li>`).join('');
-          document.getElementById('commodities').innerHTML=`<ul class="space-y-1">${html}</ul>`;
-        }catch(e){document.getElementById('commodities').innerHTML='<p>Erro ao carregar cotações.</p>';}
+          const symbols = {
+            'Café (ICE)': 'KC=F',
+            'Soja (CBOT)': 'ZS=F',
+            'Milho (CBOT)': 'ZC=F'
+          };
+          const cotacoes = [];
+          let usdbrl = 5.20; // fallback padrão
+
+          const cotacaoBRL = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_VANTAGE_KEY}`);
+          if (cotacaoBRL && cotacaoBRL['Realtime Currency Exchange Rate']) {
+            usdbrl = parseFloat(cotacaoBRL['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+          }
+
+          for (const [nome, codigo] of Object.entries(symbols)) {
+            const data = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${codigo}&apikey=${ALPHA_VANTAGE_KEY}`);
+            const priceUSD = parseFloat(data['Global Quote']['05. price']);
+            const priceBRL = (priceUSD * usdbrl).toFixed(2);
+            cotacoes.push({ nome, priceBRL });
+          }
+
+          const rows = cotacoes.map(c => `<tr><td class="py-1 pr-6">${c.nome}</td><td class="py-1">R$ ${c.priceBRL}</td></tr>`).join('');
+          const table = `<table class="text-sm mt-2"><thead><tr><th class="text-left">Produto</th><th class="text-left">Preço (R$)</th></tr></thead><tbody>${rows}</tbody></table>`;
+          document.getElementById('commodities').innerHTML = table;
+        } catch (e) {
+          document.getElementById('commodities').innerHTML = '<p>Erro ao carregar cotações.</p>';
+        }
       }
 
-      // ===== NEWS =====
       async function loadNews(){
         try{
           const feeds=[
@@ -108,5 +126,3 @@
     </script>
   </body>
 </html>
-
-

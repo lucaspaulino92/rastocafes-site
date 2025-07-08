@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Área do Produtor - Rasto Cafés</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {font-family: 'Segoe UI', sans-serif;}
       .loader{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
       .card{transition:transform .2s ease} .card:hover{transform:translateY(-4px)}
+      .icon { width: 20px; height: 20px; display: inline-block; margin-right: 6px; vertical-align: middle; }
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
@@ -24,6 +26,7 @@
         <div id="weather" class="text-gray-700 space-y-4">
           <div id="weather-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando previsão...</div>
         </div>
+        <canvas id="weatherChart" height="100"></canvas>
       </section>
 
       <!-- Commodities -->
@@ -60,16 +63,48 @@
           const api=`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&forecast_days=7&timezone=America%2FSao_Paulo`;
           try{
             const data=await fetchJSON(api);
-            const codes={0:'Céu limpo',1:'Principalmente claro',2:'Parcialmente nublado',3:'Nublado',45:'Neblina',48:'Neblina gelada',51:'Chuvisco leve',53:'Chuvisco moderado',55:'Chuvisco intenso',56:'Chuvisco gelado leve',57:'Chuvisco gelado intenso',61:'Chuva leve',63:'Chuva moderada',65:'Chuva forte',66:'Chuva gelada leve',67:'Chuva gelada forte',71:'Neve leve',73:'Neve moderada',75:'Neve forte',80:'Pancadas leves',81:'Pancadas moderadas',82:'Pancadas fortes',95:'Trovoada',96:'Trovoada c/ granizo leve',99:'Trovoada c/ granizo forte'};
+            const codes={0:'☀️ Céu limpo',1:'🌤️ Principalmente claro',2:'⛅ Parcialmente nublado',3:'☁️ Nublado',45:'🌫️ Neblina',48:'🌫️ Neblina gelada',51:'🌦️ Chuvisco leve',53:'🌦️ Chuvisco moderado',55:'🌧️ Chuvisco intenso',56:'🌧️ Chuvisco gelado leve',57:'🌧️ Chuvisco gelado forte',61:'🌧️ Chuva leve',63:'🌧️ Chuva moderada',65:'🌧️ Chuva forte',66:'🌨️ Chuva gelada leve',67:'🌨️ Chuva gelada forte',71:'❄️ Neve leve',73:'❄️ Neve moderada',75:'❄️ Neve forte',80:'🌦️ Pancadas leves',81:'🌦️ Pancadas moderadas',82:'🌧️ Pancadas fortes',95:'⛈️ Trovoada',96:'⛈️ Trovoada com granizo leve',99:'⛈️ Trovoada com granizo forte'};
             const cw=data.current_weather;
             const currentHTML=`<p class="text-xl"><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode]||'Condição desconhecida'}</p><p class="text-gray-600 text-sm">Atualizado: ${new Date(cw.time).toLocaleString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</p>`;
+            const dailyLabels=[]; const dailyMins=[]; const dailyMaxs=[];
             const dailyRows=data.daily.time.map((date,i)=>{
               const d=new Date(date);
               const day=d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+              dailyLabels.push(day);
+              dailyMins.push(data.daily.temperature_2m_min[i]);
+              dailyMaxs.push(data.daily.temperature_2m_max[i]);
               return `<tr><td class="py-1 pr-4">${day}</td><td class="py-1">${codes[data.daily.weathercode[i]]||'-'}</td><td class="py-1">${data.daily.temperature_2m_min[i]}°C / ${data.daily.temperature_2m_max[i]}°C</td></tr>`;
             }).join('');
-            const table=`<table class="text-sm mt-4"><thead><tr><th class="text-left">Dia</th><th class="text-left">Condição</th><th class="text-left">Temperatura</th></tr></thead><tbody>${dailyRows}</tbody></table>`;
+            const table=`<table class="text-sm mt-4 w-full border"><thead><tr><th class="text-left border-b pb-1">Dia</th><th class="text-left border-b pb-1">Condição</th><th class="text-left border-b pb-1">Temperatura</th></tr></thead><tbody>${dailyRows}</tbody></table>`;
             document.getElementById('weather').innerHTML=currentHTML+table;
+
+            // Gráfico
+            const ctx = document.getElementById('weatherChart').getContext('2d');
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: dailyLabels,
+                datasets: [
+                  {
+                    label: 'Mínima (°C)',
+                    data: dailyMins,
+                    borderColor: '#60A5FA',
+                    backgroundColor: 'transparent'
+                  },
+                  {
+                    label: 'Máxima (°C)',
+                    data: dailyMaxs,
+                    borderColor: '#F59E0B',
+                    backgroundColor: 'transparent'
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: false } }
+              }
+            });
           }catch(e){document.getElementById('weather').innerHTML='<p>Erro ao carregar clima.</p>';}
         },()=>{document.getElementById('weather').innerHTML='<p>Permita localização para ver o clima.</p>';});
       }
@@ -82,7 +117,7 @@
             'Milho (CBOT)': 'ZC=F'
           };
           const cotacoes = [];
-          let usdbrl = 5.20; // fallback padrão
+          let usdbrl = 5.20;
 
           const cotacaoBRL = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_VANTAGE_KEY}`);
           if (cotacaoBRL && cotacaoBRL['Realtime Currency Exchange Rate']) {
@@ -96,8 +131,8 @@
             cotacoes.push({ nome, priceBRL });
           }
 
-          const rows = cotacoes.map(c => `<tr><td class="py-1 pr-6">${c.nome}</td><td class="py-1">R$ ${c.priceBRL}</td></tr>`).join('');
-          const table = `<table class="text-sm mt-2"><thead><tr><th class="text-left">Produto</th><th class="text-left">Preço (R$)</th></tr></thead><tbody>${rows}</tbody></table>`;
+          const rows = cotacoes.map(c => `<tr><td class="py-1 pr-6 border-b">${c.nome}</td><td class="py-1 border-b">R$ ${c.priceBRL}</td></tr>`).join('');
+          const table = `<table class="text-sm mt-2 w-full"><thead><tr><th class="text-left pb-1 border-b">Produto</th><th class="text-left pb-1 border-b">Preço (R$)</th></tr></thead><tbody>${rows}</tbody></table>`;
           document.getElementById('commodities').innerHTML = table;
         } catch (e) {
           document.getElementById('commodities').innerHTML = '<p>Erro ao carregar cotações.</p>';

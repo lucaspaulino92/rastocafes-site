@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Área do Produtor - Rasto Cafés</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <!-- Header -->
+    <header class="bg-gray-800 text-white py-6 text-center">
+      <h1 class="text-3xl font-bold">Área do Produtor</h1>
+      <p class="text-sm mt-2">Informações em tempo real para decisões agrícolas mais seguras</p>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="px-6 md:px-20 py-12 space-y-12">
+
+      <!-- Clima Local -->
+      <section class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-2xl font-semibold mb-4">Previsão do Tempo</h2>
+        <p class="text-gray-600">Clima local para a sua fazenda, atualizado diariamente.</p>
+        <div class="mt-4 italic text-gray-500">(Em breve: previsão automática baseada na sua localização)</div>
+      </section>
+
+      <!-- Commodities -->
+      <section class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-2xl font-semibold mb-4">Cotações de Commodities</h2>
+        <ul class="space-y-2">
+          <li><strong>Café Arábica:</strong> R$ 1.050,00/sc (indicativo)</li>
+          <li><strong>Milho:</strong> R$ 70,00/sc</li>
+          <li><strong>Soja:</strong> R$ 135,00/sc</li>
+        </ul>
+        <div class="mt-4 italic text-gray-500">(Valores simulados — atualização automática em desenvolvimento)</div>
+      </section>
+
+      <!-- Notícias Agrícolas -->
+      <section class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-2xl font-semibold mb-4">Notícias do Setor Agrícola</h2>
+        <ul class="list-disc list-inside text-gray-700 space-y-1">
+          <li>Mercado de café aponta recuperação nas exportações em julho.</li>
+          <li>Safra de milho 2025 tem expectativa de leve queda no Centro-Oeste.</li>
+          <li>Produtores investem mais em sustentabilidade e rastreabilidade.</li>
+        </ul>
+        <div class="mt-4 italic text-gray-500">(Conteúdo de exemplo — pode ser atualizado via integração)</div>
+      </section>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="py-6 bg-gray-800 text-white text-center">
+      <p>&copy; 2025 Rasto Cafés. Todos os direitos reservados.</p>
+    </footer>
+  </body>
+</html>

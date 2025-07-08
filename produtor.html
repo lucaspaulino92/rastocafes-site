@@ -4,57 +4,140 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Área do Produtor - Rasto Cafés</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <style>
       body {
         font-family: 'Segoe UI', sans-serif;
+      }
+      /* Loader simples */
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
       }
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
     <!-- Header -->
-    <header class="bg-gray-800 text-white py-6 text-center">
-      <h1 class="text-3xl font-bold">Área do Produtor</h1>
-      <p class="text-sm mt-2">Informações em tempo real para decisões agrícolas mais seguras</p>
+    <header class="bg-gradient-to-r from-yellow-700 via-yellow-600 to-yellow-500 text-white py-8 text-center shadow-lg">
+      <h1 class="text-4xl font-bold drop-shadow-lg">Área do Produtor</h1>
+      <p class="text-sm mt-2">Informações dinâmicas para decisões agrícolas mais seguras</p>
     </header>
 
     <!-- Conteúdo Principal -->
     <main class="px-6 md:px-20 py-12 space-y-12">
-
       <!-- Clima Local -->
-      <section class="bg-white rounded-xl shadow-md p-6">
-        <h2 class="text-2xl font-semibold mb-4">Previsão do Tempo</h2>
-        <p class="text-gray-600">Clima local para a sua fazenda, atualizado diariamente.</p>
-        <div class="mt-4 italic text-gray-500">(Em breve: previsão automática baseada na sua localização)</div>
+      <section class="bg-white rounded-xl shadow-md p-6 animate-fade-in">
+        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 100-8 4 4 0 000 8zm0 0v6m0-6a4 4 0 110 8h18"></path></svg> Previsão do Tempo</h2>
+        <div id="weather" class="text-gray-700">
+          <div id="weather-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando previsão...</div>
+        </div>
       </section>
 
       <!-- Commodities -->
-      <section class="bg-white rounded-xl shadow-md p-6">
-        <h2 class="text-2xl font-semibold mb-4">Cotações de Commodities</h2>
-        <ul class="space-y-2">
-          <li><strong>Café Arábica:</strong> R$ 1.050,00/sc (indicativo)</li>
-          <li><strong>Milho:</strong> R$ 70,00/sc</li>
-          <li><strong>Soja:</strong> R$ 135,00/sc</li>
-        </ul>
-        <div class="mt-4 italic text-gray-500">(Valores simulados — atualização automática em desenvolvimento)</div>
+      <section class="bg-white rounded-xl shadow-md p-6 animate-fade-in delay-100">
+        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4m8 0c0-2.21-1.79-4-4-4m0 8c2.21 0 4-1.79 4-4m-8 0c0 2.21 1.79 4 4 4"></path></svg> Cotações de Commodities</h2>
+        <div id="commodities" class="text-gray-700">
+          <div id="commodities-loading" class="flex items-center gap-2"><span class="loader"></span> Buscando cotações...</div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Valores meramente informativos. Fonte: Alpha Vantage (requer chave gratuita).</p>
       </section>
 
       <!-- Notícias Agrícolas -->
-      <section class="bg-white rounded-xl shadow-md p-6">
-        <h2 class="text-2xl font-semibold mb-4">Notícias do Setor Agrícola</h2>
-        <ul class="list-disc list-inside text-gray-700 space-y-1">
-          <li>Mercado de café aponta recuperação nas exportações em julho.</li>
-          <li>Safra de milho 2025 tem expectativa de leve queda no Centro-Oeste.</li>
-          <li>Produtores investem mais em sustentabilidade e rastreabilidade.</li>
-        </ul>
-        <div class="mt-4 italic text-gray-500">(Conteúdo de exemplo — pode ser atualizado via integração)</div>
+      <section class="bg-white rounded-xl shadow-md p-6 animate-fade-in delay-200">
+        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7z" /></svg> Notícias do Setor Agrícola</h2>
+        <div id="news" class="space-y-2 text-gray-700">
+          <div id="news-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando notícias...</div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Fontes: InfoMoney, Investing (RSS público).</p>
       </section>
-
     </main>
 
     <!-- Rodapé -->
     <footer class="py-6 bg-gray-800 text-white text-center">
       <p>&copy; 2025 Rasto Cafés. Todos os direitos reservados.</p>
     </footer>
+
+    <!-- Scripts -->
+    <script>
+      // ========= CONFIGURAÇÕES =========
+      const ALPHA_VANTAGE_KEY = 'SUA_CHAVE_ALPHA_VANTAGE'; // obtenha grátis em https://www.alphavantage.co
+      // ========= FUNÇÃO UTIL =========
+      const fetchJSON = (url) => fetch(url).then((r) => r.json());
+
+      // ========= CLIMA =========
+      function loadWeather() {
+        if (!navigator.geolocation) {
+          document.getElementById('weather').innerHTML = '<p>Geolocalização não suportada.</p>';
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m`;
+          try {
+            const data = await fetchJSON(apiUrl);
+            const w = data.current_weather;
+            const html = `<p class="text-xl"><strong>${w.temperature}°C</strong> | ${w.weathercode === 0 ? 'Céu limpo' : 'Condição variável'}</p><p class="text-gray-600 text-sm">Atualizado: ${new Date(w.time).toLocaleString('pt-BR')}</p>`;
+            document.getElementById('weather').innerHTML = html;
+          } catch (e) {
+            document.getElementById('weather').innerHTML = '<p>Erro ao carregar clima.</p>';
+          }
+        }, () => {
+          document.getElementById('weather').innerHTML = '<p>Permita a localização para ver o clima local.</p>';
+        });
+      }
+
+      // ========= COMMODITIES =========
+      async function loadCommodities() {
+        if (ALPHA_VANTAGE_KEY === 'SUA_CHAVE_ALPHA_VANTAGE') {
+          document.getElementById('commodities').innerHTML = '<p>Adicione sua chave Alpha Vantage no código para carregar cotações ao vivo.</p>';
+          return;
+        }
+        const symbols = {
+          cafe: 'KC=F', // Coffee futures (ICE)
+          soja: 'ZS=F',
+          milho: 'ZC=F',
+        };
+        const result = [];
+        for (const [nome, symbol] of Object.entries(symbols)) {
+          try {
+            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_KEY}`;
+            const data = await fetchJSON(url);
+            const price = data['Global Quote']['05. price'];
+            result.push(`<li><strong>${nome.charAt(0).toUpperCase() + nome.slice(1)}:</strong> US$ ${parseFloat(price).toFixed(2)}</li>`);
+          } catch {
+            result.push(`<li><strong>${nome}:</strong> N/D</li>`);
+          }
+        }
+        document.getElementById('commodities').innerHTML = `<ul class="space-y-1">${result.join('')}</ul>`;
+      }
+
+      // ========= NOTÍCIAS =========
+      async function loadNews() {
+        try {
+          const rssUrl = encodeURIComponent('https://www.infomoney.com.br/mercados/feed/');
+          const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+          const data = await fetchJSON(apiUrl);
+          const items = data.items.slice(0, 5);
+          const html = items.map(i => `<a href="${i.link}" target="_blank" class="block hover:underline">• ${i.title}</a>`).join('');
+          document.getElementById('news').innerHTML = html;
+        } catch (e) {
+          document.getElementById('news').innerHTML = '<p>Erro ao carregar notícias.</p>';
+        }
+      }
+
+      // ========= CHAMADAS =========
+      loadWeather();
+      loadCommodities();
+      loadNews();
+    </script>
   </body>
 </html>
+

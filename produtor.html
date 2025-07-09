@@ -98,16 +98,34 @@
       sb.auth.getSession().then(({data:{session}})=>{if(session){loginBtn.classList.add('hidden');logoutBtn.classList.remove('hidden');}});
 
       /* Tempo */
-      async function loadWeather(){
-        try{
-          if(!navigator.geolocation)throw new Error('Sem geolocalização');
-          navigator.geolocation.getCurrentPosition(async({coords})=>{
-            const api=`https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&daily=temperature_2m_min,temperature_2m_max&timezone=America%2FSao_Paulo`;
-            const data=await fetchJSON(api);
-            const rows=data.daily.time.map((d,i)=>`<tr><td>${new Date(d).toLocaleDateString('pt-BR')}</td><td>${data.daily.temperature_2m_min[i]}°C</td><td>${data.daily.temperature_2m_max[i]}°C</td></tr>`).join('');
-            $('#weather').innerHTML=`<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
-          });
-        }catch(e){$('#weather').innerHTML='<p>Erro ao carregar clima.</p>';} finally{$('#weather-loading')?.remove();}
+      async function loadWeather() {
+        if (!navigator.geolocation) {
+          document.getElementById('weather').innerHTML = '<p>Geolocalização não suportada.</p>'; return;
+        }
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const { latitude, longitude } = pos.coords;
+          const api = https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&forecast_days=7&timezone=America%2FSao_Paulo;
+          try {
+            const data = await fetchJSON(api);
+            const codes = {0:'☀️ Céu limpo',1:'🌤️ Principalmente claro',2:'⛅ Parcialmente nublado',3:'☁️ Nublado',45:'🌫️ Neblina',48:'🌫️ Neblina gelada',51:'🌦️ Chuvisco leve',53:'🌦️ Chuvisco moderado',55:'🌧️ Chuvisco intenso',56:'🌧️ Chuvisco gelado leve',57:'🌧️ Chuvisco gelado forte',61:'🌧️ Chuva leve',63:'🌧️ Chuva moderada',65:'🌧️ Chuva forte',66:'🌨️ Chuva gelada leve',67:'🌨️ Chuva gelada forte',71:'❄️ Neve leve',73:'❄️ Neve moderada',75:'❄️ Neve forte',80:'🌦️ Pancadas leves',81:'🌦️ Pancadas moderadas',82:'🌧️ Pancadas fortes',95:'⛈️ Trovoada',96:'⛈️ Trovoada granizo leve',99:'⛈️ Trovoada granizo forte'};
+            const cw = data.current_weather;
+            const current = <p class="text-xl"><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode] || 'Condição'}</p><p class="text-gray-600 text-sm">Atualizado: ${new Date(cw.time).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</p>;
+            const labels = []; const mins = []; const maxs = [];
+            const rows = data.daily.time.map((d,i)=>{
+              const date=new Date(d);
+              labels.push(date.toLocaleDateString('pt-BR',{weekday:'short'}));
+              mins.push(data.daily.temperature_2m_min[i]);
+              maxs.push(data.daily.temperature_2m_max[i]);
+              return <tr><td class='py-1 pr-4'>${date.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})}</td><td class='py-1'>${codes[data.daily.weathercode[i]]||'-'}</td><td class='py-1'>${mins[i]}°C / ${maxs[i]}°C</td></tr>;
+            }).join('');
+            document.getElementById('weather').innerHTML = current + <table class='text-sm mt-4 w-full'><thead><tr><th class='text-left pb-1 border-b'>Dia</th><th class='text-left pb-1 border-b'>Condição</th><th class='text-left pb-1 border-b'>Temp</th></tr></thead><tbody>${rows}</tbody></table>;
+            new Chart(document.getElementById('weatherChart'), {
+              type:'line',
+              data:{labels,datasets:[{label:'Min',data:mins,borderColor:'#60A5FA',backgroundColor:'transparent'},{label:'Max',data:maxs,borderColor:'#F59E0B',backgroundColor:'transparent'}]},
+              options:{plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:false}}}
+            });
+          } catch {document.getElementById('weather').innerHTML = '<p>Erro ao carregar clima.</p>';}
+        },()=>{document.getElementById('weather').innerHTML='<p>Permita localização para ver o clima.</p>';});
       }
 
       /* Commodities */

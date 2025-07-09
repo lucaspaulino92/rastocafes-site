@@ -170,15 +170,16 @@
       /* ========== NOTÍCIAS ========== */
       async function loadNews() {
         try {
-          const feeds=['https://www.infomoney.com.br/mercados/feed/','https://br.investing.com/rss/news_25.rss'];
-          const items=[];
-          for(const f of feeds){
-            const d=await fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f)}`);
-            if(d.items) items.push(...d.items.slice(0,3));
-          }
-          document.getElementById('news').innerHTML = items.slice(0,6).map(i=>`<a href='${i.link}' target='_blank' class='block hover:underline'>• ${i.title}</a>`).join('') || '<p>Nenhuma notícia.</p>';
-        } catch {document.getElementById('news').innerHTML='<p>Erro ao carregar notícias.</p>';}
+          const feeds=['https://www.infomoney.com.br/mercados/feed/',
+                       'https://br.investing.com/rss/news_25.rss',
+                       'https://www.noticiasagricolas.com.br/rss/noticias/rss.xml'
+                      ];
+          const promises = feeds.map(url => fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`));
+        const results = await Promise.all(promises);
+        const items = results.flatMap(r => r.items || []).slice(0, 10);
+        document.getElementById('news').innerHTML = items.map(i => `<a href="${i.link}" target="_blank" class="block hover:underline">• ${i.title}</a>`).join('');
       }
+
 
       /* ========== EXECUÇÃO ========== */
       loadWeather();

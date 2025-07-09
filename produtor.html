@@ -45,7 +45,6 @@
         <div id="weather" class="text-gray-700 space-y-4">
           <div id="weather-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando previsão...</div>
         </div>
-        <canvas id="weatherChart" height="100"></canvas>
       </section>
 
       <section class="bg-white rounded-xl shadow-md p-6 card">
@@ -53,7 +52,7 @@
         <div id="commodities" class="text-gray-700">
           <div id="commodities-loading" class="flex items-center gap-2"><span class="loader"></span> Buscando cotações...</div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">Valores aproximados com base no câmbio comercial. Fonte: Alpha Vantage.</p>
+        <p class="text-xs text-gray-500 mt-2">Fonte: Alpha Vantage (USD→BRL)</p>
       </section>
 
       <section class="bg-white rounded-xl shadow-md p-6 card">
@@ -61,7 +60,6 @@
         <div id="news" class="space-y-2 text-gray-700">
           <div id="news-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando notícias...</div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">Fontes: InfoMoney, Notícias Agrícolas, Investing.</p>
       </section>
     </main>
 
@@ -71,7 +69,7 @@
 
     <script>
       const SUPABASE_URL = 'https://spgfbcmzlbuaznegjreu.supabase.co';
-      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwZ2ZiY216bGJ1YXpuZWdqcmV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTUyNTksImV4cCI6MjA1OTk5MTI1OX0.lq9_YHkrGVChYzkYL3uvr6CZ3pN2RBa0MJQp0wz3-X0';
+      const SUPABASE_ANON = 'eyJhbGciOi...';
       const ALPHA_KEY = '5TDXOCJ21L6A7P4Z';
       const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -81,10 +79,10 @@
         try {
           const map = {'Café (ICE)':'KC=F','Soja (CBOT)':'ZS=F','Milho (CBOT)':'ZC=F'};
           const brlData = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
-          const usdbrl = parseFloat(brlData['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+          const usdbrl = parseFloat(brlData['Realtime Currency Exchange Rate']?.['5. Exchange Rate']) || 5.0;
           const rows = await Promise.all(Object.entries(map).map(async ([nome,sym]) => {
             const q = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${ALPHA_KEY}`);
-            const usd = parseFloat(q['Global Quote']['05. price']);
+            const usd = parseFloat(q['Global Quote']?.['05. price']) || 0;
             const brl = (usd * usdbrl).toFixed(2);
             return `<tr><td>${nome}</td><td>R$ ${brl}</td></tr>`;
           }));
@@ -92,39 +90,48 @@
         } catch (e) {
           document.getElementById('commodities').innerHTML = '<p>Erro ao carregar cotações.</p>';
         }
+        document.getElementById('commodities-loading').remove();
       }
 
       async function loadNews() {
-        const feeds = [
-          'https://www.infomoney.com.br/mercados/feed/',
-          'https://www.noticiasagricolas.com.br/rss/noticias/rss.xml',
-          'https://br.investing.com/rss/news_25.rss'
-        ];
-        const promises = feeds.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(r => r.json()));
-        const results = await Promise.all(promises);
-        const items = results.flatMap(r => r.items || []).slice(0, 10);
-        document.getElementById('news').innerHTML = items.map(i => `<a href="${i.link}" target="_blank" class="block hover:underline">• ${i.title}</a>`).join('');
+        try {
+          const feeds = [
+            'https://www.infomoney.com.br/mercados/feed/',
+            'https://www.noticiasagricolas.com.br/rss/noticias/rss.xml',
+            'https://br.investing.com/rss/news_25.rss'
+          ];
+          const results = await Promise.all(feeds.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(r => r.json())));
+          const items = results.flatMap(r => r.items || []).slice(0, 10);
+          document.getElementById('news').innerHTML = items.map(i => `<a href="${i.link}" target="_blank" class="block hover:underline">• ${i.title}</a>`).join('');
+        } catch {
+          document.getElementById('news').innerHTML = '<p>Erro ao carregar notícias.</p>';
+        }
+        document.getElementById('news-loading').remove();
       }
 
       async function loadWeather() {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-          const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&hourly=temperature_2m&daily=weathercode,temperature_2m_min,temperature_2m_max&timezone=auto`;
-          const data = await fetchJSON(apiUrl);
-          const days = data.daily.time.map((t, i) => ({
-            date: new Date(t).toLocaleDateString('pt-BR'),
-            min: data.daily.temperature_2m_min[i],
-            max: data.daily.temperature_2m_max[i]
-          }));
-          const html = '<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>' +
-            days.map(d => `<tr><td>${d.date}</td><td>${d.min}°C</td><td>${d.max}°C</td></tr>`).join('') + '</tbody></table>';
-          document.getElementById('weather').innerHTML = html;
-        });
+        try {
+          if (!navigator.geolocation) throw new Error('Geolocalização não suportada');
+          navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&daily=weathercode,temperature_2m_min,temperature_2m_max&timezone=America%2FSao_Paulo`;
+            const data = await fetchJSON(apiUrl);
+            const rows = data.daily.time.map((t, i) => {
+              const dia = new Date(t).toLocaleDateString('pt-BR');
+              const min = data.daily.temperature_2m_min[i];
+              const max = data.daily.temperature_2m_max[i];
+              return `<tr><td>${dia}</td><td>${min}°C</td><td>${max}°C</td></tr>`;
+            }).join('');
+            document.getElementById('weather').innerHTML = `<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
+          });
+        } catch {
+          document.getElementById('weather').innerHTML = '<p>Erro ao obter clima.</p>';
+        }
+        document.getElementById('weather-loading').remove();
       }
 
-      document.getElementById('loginBtn').addEventListener('click', () => loginModal.classList.remove('hidden'));
-      document.getElementById('closeModal').addEventListener('click', () => loginModal.classList.add('hidden'));
-      document.getElementById('submitLogin').addEventListener('click', async () => {
+      document.getElementById('loginBtn').onclick = () => loginModal.classList.remove('hidden');
+      document.getElementById('closeModal').onclick = () => loginModal.classList.add('hidden');
+      document.getElementById('submitLogin').onclick = async () => {
         loginError.classList.add('hidden');
         const { error } = await supabase.auth.signInWithPassword({
           email: emailInput.value,
@@ -137,13 +144,13 @@
           loginModal.classList.add('hidden');
           window.location.href = 'painel.html';
         }
-      });
+      };
 
-      document.getElementById('logoutBtn').addEventListener('click', async () => {
+      document.getElementById('logoutBtn').onclick = async () => {
         await supabase.auth.signOut();
         logoutBtn.classList.add('hidden');
         loginBtn.classList.remove('hidden');
-      });
+      };
 
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {

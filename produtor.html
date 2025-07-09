@@ -171,20 +171,24 @@ async function loadWeather() {
 }
 
       
-      async function loadCommodities() {
-        try {
-          const map = { 'Café (ICE)': 'KC=F', 'Soja (CBOT)': 'ZS=F', 'Milho (CBOT)': 'ZC=F' };
-          const brl = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
-          const usdbrl = parseFloat(brl['Realtime Currency Exchange Rate']?.['5. Exchange Rate']) || 5;
-          const rows = await Promise.all(Object.entries(map).map(async ([n, s]) => {
-            const q = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${s}&apikey=${ALPHA_KEY}`);
-            const p = parseFloat(q['Global Quote']?.['05. price']) || 0;
-            return `<tr><td>${n}</td><td>R$ ${(p * usdbrl).toFixed(2)}</td></tr>`;
-          }));
-          $('#commodities').innerHTML = `<table><thead><tr><th>Produto</th><th>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-        } catch { $('#commodities').innerHTML = '<p>Erro ao carregar cotações.</p>'; }
-        $('#commodities-loading')?.remove();
-      }
+       <!-- CEPEA Widget -->
+      <section class="bg-white rounded-xl shadow-md p-6 card">
+        <h2 class="text-2xl font-semibold mb-4">Indicador do Café Arábica CEPEA/ESALQ</h2>
+        <div class="mb-4">
+          <script type="text/javascript" src="https://www.cepea.org.br/br/widgetproduto.js.php?fonte=arial&tamanho=10&largura=400px&corfundo=dbd6b2&cortexto=333333&corlinha=ede7bf&id_indicador%5B%5D=23"></script>
+        </div>
+        <table class="text-sm w-full mb-2">
+          <thead><tr><th>Data</th><th>R$</th><th>Var. Dia</th><th>Var. Mês</th><th>US$</th></tr></thead>
+          <tbody>
+            <tr><td>08/07/2025</td><td>1.685,98</td><td>+0,19%</td><td>-8,09%</td><td>309,58</td></tr>
+            <tr><td>07/07/2025</td><td>1.682,70</td><td>-3,12%</td><td>-8,27%</td><td>307,12</td></tr>
+            <tr><td>04/07/2025</td><td>1.736,94</td><td>-0,30%</td><td>-5,31%</td><td>320,23</td></tr>
+            <tr><td>03/07/2025</td><td>1.742,20</td><td>-2,12%</td><td>-5,02%</td><td>321,91</td></tr>
+            <tr><td>02/07/2025</td><td>1.779,95</td><td>-1,52%</td><td>-2,97%</td><td>328,16</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-1">Fonte: CEPEA/ESALQ – Atualização manual. Uso permitido apenas não-comercial.</p>
+      </section>
 
       async function loadNews() {
         try {

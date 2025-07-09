@@ -78,8 +78,7 @@
       const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
       const $ = s => document.querySelector(s);
       const fetchJSON = u => fetch(u).then(r => r.json());
-      const ALPHA_KEY = '5TDXOCJ21L6A7P4Z';
-
+      
       $('#loginBtn').onclick = () => $('#loginModal').classList.remove('hidden');
       $('#closeModal').onclick = () => $('#loginModal').classList.add('hidden');
       $('#submitLogin').onclick = async () => {
@@ -169,7 +168,6 @@ async function loadWeather() {
     $('#weather-loading')?.remove();
   });
 }
-
       
        <!-- CEPEA Widget -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
@@ -201,7 +199,6 @@ async function loadWeather() {
       }
 
       loadWeather();
-      loadCommodities();
       loadNews();
     </script>
   </body>

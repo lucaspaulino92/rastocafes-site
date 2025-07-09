@@ -81,24 +81,7 @@
       const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
       const fetchJSON = url => fetch(url).then(r => r.json());
-
-      async function loadCommodities() {
-        try {
-          const map = {'Café (ICE)':'KC=F','Soja (CBOT)':'ZS=F','Milho (CBOT)':'ZC=F'};
-          const brlData = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
-          const usdbrl = brlData?.['Realtime Currency Exchange Rate'] ? parseFloat(brlData['Realtime Currency Exchange Rate']['5. Exchange Rate']) : 5.2;
-          const rows = await Promise.all(Object.entries(map).map(async ([nome,sym])=>{
-            const q = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${ALPHA_KEY}`);
-            const usd = parseFloat(q['Global Quote']['05. price']);
-            const brl = (usd*usdbrl).toFixed(2);
-            return `<tr><td class='py-1 pr-6 border-b'>${nome}</td><td class='py-1 border-b'>R$ ${brl}</td></tr>`;
-          }));
-          document.getElementById('commodities').innerHTML = `<table class='text-sm mt-2 w-full'><thead><tr><th class='text-left pb-1 border-b'>Produto</th><th class='text-left pb-1 border-b'>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-        } catch {
-          document.getElementById('commodities').innerHTML='<p>Erro ao carregar cotações.</p>';
-        }
-      }
-      
+    
       const loginBtn = document.getElementById('loginBtn');
       const logoutBtn = document.getElementById('logoutBtn');
       const loginModal = document.getElementById('loginModal');
@@ -168,6 +151,23 @@
         },()=>{document.getElementById('weather').innerHTML='<p>Permita localização para ver o clima.</p>';});
       }
 
+      async function loadCommodities() {
+        try {
+          const map = {'Café (ICE)':'KC=F','Soja (CBOT)':'ZS=F','Milho (CBOT)':'ZC=F'};
+          const brlData = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
+          const usdbrl = brlData?.['Realtime Currency Exchange Rate'] ? parseFloat(brlData['Realtime Currency Exchange Rate']['5. Exchange Rate']) : 5.2;
+          const rows = await Promise.all(Object.entries(map).map(async ([nome,sym])=>{
+            const q = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${ALPHA_KEY}`);
+            const usd = parseFloat(q['Global Quote']['05. price']);
+            const brl = (usd*usdbrl).toFixed(2);
+            return `<tr><td class='py-1 pr-6 border-b'>${nome}</td><td class='py-1 border-b'>R$ ${brl}</td></tr>`;
+          }));
+          document.getElementById('commodities').innerHTML = `<table class='text-sm mt-2 w-full'><thead><tr><th class='text-left pb-1 border-b'>Produto</th><th class='text-left pb-1 border-b'>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+        } catch {
+          document.getElementById('commodities').innerHTML='<p>Erro ao carregar cotações.</p>';
+        }
+      }
+      
          /* ========== NOTÍCIAS ========== */
       async function loadNews() {
         try {

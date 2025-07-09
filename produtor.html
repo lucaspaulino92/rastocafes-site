@@ -95,29 +95,82 @@
       $('#logoutBtn').onclick = async () => { await sb.auth.signOut(); $('#logoutBtn').classList.add('hidden'); $('#loginBtn').classList.remove('hidden'); };
       sb.auth.getSession().then(({ data: { session } }) => { if (session) { $('#loginBtn').classList.add('hidden'); $('#logoutBtn').classList.remove('hidden'); } });
 
-      async function loadWeather() {
-        if (!navigator.geolocation) { $('#weather').innerHTML = '<p>Geolocalização não suportada.</p>'; return; }
-        navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-          const api = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
-          try {
-            const data = await fetchJSON(api);
-            const codes = { 0: '☀️ Céu limpo', 1: '🌤️ Claro', 2: '⛅ Parcial', 3: '☁️ Nublado', 61: '🌧️ Chuva', 80: '🌦️ Pancadas', 95: '⛈️ Trovoada' };
-            const cw = data.current_weather;
-            const top = `<p class='text-xl'><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode] || '--'}</p><p class='text-xs text-gray-600'>Atualizado: ${new Date(cw.time).toLocaleTimeString('pt-BR')}</p>`;
-            const labels = [], mins = [], maxs = [], rows = data.daily.time.map((t, i) => {
-              const d = new Date(t);
-              labels.push(d.toLocaleDateString('pt-BR', { weekday: 'short' }));
-              mins.push(data.daily.temperature_2m_min[i]);
-              maxs.push(data.daily.temperature_2m_max[i]);
-              return `<tr><td>${labels[i]}</td><td>${mins[i]}°C</td><td>${maxs[i]}°C</td></tr>`;
-            }).join('');
-            $('#weather').innerHTML = top + `<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
-            new Chart($('#weatherChart'), { type: 'line', data: { labels, datasets: [{ label: 'Min', data: mins, borderColor: '#60A5FA', backgroundColor: 'transparent' }, { label: 'Max', data: maxs, borderColor: '#F59E0B', backgroundColor: 'transparent' }] } });
-          } catch { $('#weather').innerHTML = '<p>Erro ao carregar clima.</p>'; }
-          $('#weather-loading')?.remove();
-        }, () => { $('#weather').innerHTML = '<p>Permita localização.</p>'; $('#weather-loading')?.remove(); });
-      }
+async function loadWeather() {
+  if (!navigator.geolocation) {
+    $('#weather').innerHTML = '<p>Geolocalização não suportada.</p>';
+    return;
+  }
 
+  navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+    const api = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
+
+    try {
+      const data = await fetchJSON(api);
+      const codes = {
+        0: '☀️ Céu limpo', 1: '🌤️ Principalmente claro', 2: '⛅ Parcialmente nublado', 3: '☁️ Nublado',
+        45: '🌫️ Neblina', 48: '🌫️ Neblina gelada',
+        51: '🌦️ Chuvisco leve', 53: '🌦️ Chuvisco moderado', 55: '🌧️ Chuvisco intenso',
+        56: '🌧️ Chuvisco gelado leve', 57: '🌧️ Chuvisco gelado forte',
+        61: '🌧️ Chuva leve', 63: '🌧️ Chuva moderada', 65: '🌧️ Chuva forte',
+        66: '🌨️ Chuva gelada leve', 67: '🌨️ Chuva gelada forte',
+        71: '❄️ Neve leve', 73: '❄️ Neve moderada', 75: '❄️ Neve forte',
+        80: '🌦️ Pancadas leves', 81: '🌦️ Pancadas moderadas', 82: '🌧️ Pancadas fortes',
+        95: '⛈️ Trovoada', 96: '⛈️ Trovoada com granizo leve', 99: '⛈️ Trovoada com granizo forte'
+      };
+
+      const cw = data.current_weather;
+      const now = `<p class='text-xl'><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode] || '--'}</p>
+        <p class='text-xs text-gray-600'>Atualizado: ${new Date(cw.time).toLocaleTimeString('pt-BR')}</p>`;
+
+      const labels = [], mins = [], maxs = [];
+      const rows = data.daily.time.map((d, i) => {
+        const date = new Date(d);
+        const dia = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+        const cond = codes[data.daily.weathercode[i]] || '--';
+        const min = data.daily.temperature_2m_min[i];
+        const max = data.daily.temperature_2m_max[i];
+        labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
+        mins.push(min);
+        maxs.push(max);
+        return `<tr><td class='py-1 pr-4'>${dia}</td><td class='py-1'>${cond}</td><td class='py-1'>${min}°C / ${max}°C</td></tr>`;
+      }).join('');
+
+      $('#weather').innerHTML = now + `
+        <table class='text-sm mt-4 w-full'>
+          <thead>
+            <tr><th class='text-left pb-1 border-b'>Dia</th><th class='text-left pb-1 border-b'>Condição</th><th class='text-left pb-1 border-b'>Temperaturas</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+
+      new Chart($('#weatherChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Min', data: mins, borderColor: '#60A5FA', backgroundColor: 'transparent' },
+            { label: 'Max', data: maxs, borderColor: '#F59E0B', backgroundColor: 'transparent' }
+          ]
+        },
+        options: {
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: false } }
+        }
+      });
+
+    } catch {
+      $('#weather').innerHTML = '<p>Erro ao carregar clima.</p>';
+    }
+
+    $('#weather-loading')?.remove();
+
+  }, () => {
+    $('#weather').innerHTML = '<p>Permita localização.</p>';
+    $('#weather-loading')?.remove();
+  });
+}
+
+      
       async function loadCommodities() {
         try {
           const map = { 'Café (ICE)': 'KC=F', 'Soja (CBOT)': 'ZS=F', 'Milho (CBOT)': 'ZC=F' };

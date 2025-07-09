@@ -6,17 +6,18 @@
     <title>Área do Produtor - Rasto Cafés</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      body {font-family: 'Segoe UI', sans-serif;}
-      .loader{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-      .card{transition:transform .2s ease} .card:hover{transform:translateY(-4px)}
-      table { width: 100%; border-collapse: collapse; }
-      th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-      th { background-color: #f9fafb; }
+      body{font-family:'Segoe UI',sans-serif}
+      .loader{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite}
+      @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+      .card{transition:transform .2s ease}.card:hover{transform:translateY(-4px)}
+      table{width:100%;border-collapse:collapse}
+      th,td{padding:8px;text-align:left;border-bottom:1px solid #ddd}
+      th{background:#f9fafb}
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
+    <!-- Barra superior -->
     <header class="bg-gradient-to-r from-yellow-700 via-yellow-600 to-yellow-500 text-white py-4 px-6 flex items-center justify-between shadow-lg">
       <div>
         <h1 class="text-2xl md:text-3xl font-bold drop-shadow-lg">Área do Produtor</h1>
@@ -28,11 +29,12 @@
       </div>
     </header>
 
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-      <div class="bg-white rounded-lg p-6 w-full max-w-sm space-y-4">
+    <!-- Modal Login -->
+    <div id="loginModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+      <div class="bg-white p-6 rounded-lg w-full max-w-sm space-y-4">
         <h2 class="text-xl font-semibold text-center">Login do Produtor</h2>
-        <input id="emailInput" type="email" placeholder="Email" class="w-full border p-2 rounded" />
-        <input id="passwordInput" type="password" placeholder="Senha" class="w-full border p-2 rounded" />
+        <input id="emailInput" type="email" placeholder="Email" class="w-full border p-2 rounded">
+        <input id="passwordInput" type="password" placeholder="Senha" class="w-full border p-2 rounded">
         <button id="submitLogin" class="w-full bg-yellow-600 text-white py-2 rounded">Entrar</button>
         <button id="closeModal" class="w-full text-sm text-gray-500">Cancelar</button>
         <p id="loginError" class="text-red-600 text-sm hidden"></p>
@@ -40,21 +42,22 @@
     </div>
 
     <main class="px-6 md:px-20 py-12 space-y-12">
+      <!-- Tempo -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
         <h2 class="text-2xl font-semibold mb-4">Previsão do Tempo</h2>
         <div id="weather" class="text-gray-700 space-y-4">
           <div id="weather-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando previsão...</div>
         </div>
       </section>
-
+      <!-- Commodities -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
         <h2 class="text-2xl font-semibold mb-4">Cotações de Commodities (R$)</h2>
         <div id="commodities" class="text-gray-700">
           <div id="commodities-loading" class="flex items-center gap-2"><span class="loader"></span> Buscando cotações...</div>
         </div>
-        <p class="text-xs text-gray-500 mt-2">Fonte: Alpha Vantage (USD→BRL)</p>
+        <p class="text-xs text-gray-500 mt-2">Fonte: Alpha Vantage</p>
       </section>
-
+      <!-- Notícias -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
         <h2 class="text-2xl font-semibold mb-4">Notícias do Setor Agrícola</h2>
         <div id="news" class="space-y-2 text-gray-700">
@@ -68,96 +71,67 @@
     </footer>
 
     <script>
+      /* Supabase */
       const SUPABASE_URL = 'https://spgfbcmzlbuaznegjreu.supabase.co';
-      const SUPABASE_ANON = 'eyJhbGciOi...';
-      const ALPHA_KEY = '5TDXOCJ21L6A7P4Z';
-      const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwZ2ZiY216bGJ1YXpuZWdqcmV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTUyNTksImV4cCI6MjA1OTk5MTI1OX0.lq9_YHkrGVChYzkYL3uvr6CZ3pN2RBa0MJQp0wz3-X0';
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-      const fetchJSON = url => fetch(url).then(r => r.json());
+      /* Util */
+      const $ = sel => document.querySelector(sel);
+      const fetchJSON = url => fetch(url).then(r=>r.json());
+      const ALPHA_KEY='5TDXOCJ21L6A7P4Z';
 
-      async function loadCommodities() {
-        try {
-          const map = {'Café (ICE)':'KC=F','Soja (CBOT)':'ZS=F','Milho (CBOT)':'ZC=F'};
-          const brlData = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
-          const usdbrl = parseFloat(brlData['Realtime Currency Exchange Rate']?.['5. Exchange Rate']) || 5.0;
-          const rows = await Promise.all(Object.entries(map).map(async ([nome,sym]) => {
-            const q = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${sym}&apikey=${ALPHA_KEY}`);
-            const usd = parseFloat(q['Global Quote']?.['05. price']) || 0;
-            const brl = (usd * usdbrl).toFixed(2);
-            return `<tr><td>${nome}</td><td>R$ ${brl}</td></tr>`;
-          }));
-          document.getElementById('commodities').innerHTML = `<table><thead><tr><th>Produto</th><th>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-        } catch (e) {
-          document.getElementById('commodities').innerHTML = '<p>Erro ao carregar cotações.</p>';
-        }
-        document.getElementById('commodities-loading').remove();
-      }
-
-      async function loadNews() {
-        try {
-          const feeds = [
-            'https://www.infomoney.com.br/mercados/feed/',
-            'https://www.noticiasagricolas.com.br/rss/noticias/rss.xml',
-            'https://br.investing.com/rss/news_25.rss'
-          ];
-          const results = await Promise.all(feeds.map(url => fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`).then(r => r.json())));
-          const items = results.flatMap(r => r.items || []).slice(0, 10);
-          document.getElementById('news').innerHTML = items.map(i => `<a href="${i.link}" target="_blank" class="block hover:underline">• ${i.title}</a>`).join('');
-        } catch {
-          document.getElementById('news').innerHTML = '<p>Erro ao carregar notícias.</p>';
-        }
-        document.getElementById('news-loading').remove();
-      }
-
-      async function loadWeather() {
-        try {
-          if (!navigator.geolocation) throw new Error('Geolocalização não suportada');
-          navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&daily=weathercode,temperature_2m_min,temperature_2m_max&timezone=America%2FSao_Paulo`;
-            const data = await fetchJSON(apiUrl);
-            const rows = data.daily.time.map((t, i) => {
-              const dia = new Date(t).toLocaleDateString('pt-BR');
-              const min = data.daily.temperature_2m_min[i];
-              const max = data.daily.temperature_2m_max[i];
-              return `<tr><td>${dia}</td><td>${min}°C</td><td>${max}°C</td></tr>`;
-            }).join('');
-            document.getElementById('weather').innerHTML = `<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
-          });
-        } catch {
-          document.getElementById('weather').innerHTML = '<p>Erro ao obter clima.</p>';
-        }
-        document.getElementById('weather-loading').remove();
-      }
-
-      document.getElementById('loginBtn').onclick = () => loginModal.classList.remove('hidden');
-      document.getElementById('closeModal').onclick = () => loginModal.classList.add('hidden');
-      document.getElementById('submitLogin').onclick = async () => {
+      /* Login */
+      const loginBtn=$('#loginBtn'), logoutBtn=$('#logoutBtn');
+      const loginModal=$('#loginModal'), closeModal=$('#closeModal');
+      const emailInput=$('#emailInput'), passwordInput=$('#passwordInput');
+      const loginError=$('#loginError');
+      $('#submitLogin').onclick=async()=>{
         loginError.classList.add('hidden');
-        const { error } = await supabase.auth.signInWithPassword({
-          email: emailInput.value,
-          password: passwordInput.value
-        });
-        if (error) {
-          loginError.textContent = 'Credenciais inválidas';
-          loginError.classList.remove('hidden');
-        } else {
-          loginModal.classList.add('hidden');
-          window.location.href = 'painel.html';
-        }
+        const {error}=await sb.auth.signInWithPassword({email:emailInput.value,password:passwordInput.value});
+        if(error){loginError.textContent='Credenciais inválidas';loginError.classList.remove('hidden');return;}
+        loginModal.classList.add('hidden');location.href='painel.html';
       };
+      loginBtn.onclick=()=>loginModal.classList.remove('hidden');
+      closeModal.onclick=()=>loginModal.classList.add('hidden');
+      logoutBtn.onclick=async()=>{await sb.auth.signOut();logoutBtn.classList.add('hidden');loginBtn.classList.remove('hidden');};
+      sb.auth.getSession().then(({data:{session}})=>{if(session){loginBtn.classList.add('hidden');logoutBtn.classList.remove('hidden');}});
 
-      document.getElementById('logoutBtn').onclick = async () => {
-        await supabase.auth.signOut();
-        logoutBtn.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
-      };
+      /* Tempo */
+      async function loadWeather(){
+        try{
+          if(!navigator.geolocation)throw new Error('Sem geolocalização');
+          navigator.geolocation.getCurrentPosition(async({coords})=>{
+            const api=`https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&daily=temperature_2m_min,temperature_2m_max&timezone=America%2FSao_Paulo`;
+            const data=await fetchJSON(api);
+            const rows=data.daily.time.map((d,i)=>`<tr><td>${new Date(d).toLocaleDateString('pt-BR')}</td><td>${data.daily.temperature_2m_min[i]}°C</td><td>${data.daily.temperature_2m_max[i]}°C</td></tr>`).join('');
+            $('#weather').innerHTML=`<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
+          });
+        }catch(e){$('#weather').innerHTML='<p>Erro ao carregar clima.</p>';} finally{$('#weather-loading')?.remove();}
+      }
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          loginBtn.classList.add('hidden');
-          logoutBtn.classList.remove('hidden');
-        }
-      });
+      /* Commodities */
+      async function loadCommodities(){
+        try{
+          const map={'Café (ICE)':'KC=F','Soja (CBOT)':'ZS=F','Milho (CBOT)':'ZC=F'};
+          const brl=await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
+          const usdbrl=parseFloat(brl['Realtime Currency Exchange Rate']?.['5. Exchange Rate'])||5.0;
+          const rows=await Promise.all(Object.entries(map).map(async([n,s])=>{
+            const q=await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${s}&apikey=${ALPHA_KEY}`);
+            const p=parseFloat(q['Global Quote']?.['05. price'])||0;return`<tr><td>${n}</td><td>R$ ${(p*usdbrl).toFixed(2)}</td></tr>`;}));
+          $('#commodities').innerHTML=`<table><thead><tr><th>Produto</th><th>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+        }catch{$('#commodities').innerHTML='<p>Erro ao carregar cotações.</p>';} finally{$('#commodities-loading')?.remove();}
+      }
+
+      /* Notícias */
+      async function loadNews(){
+        try{
+          const feeds=['https://www.infomoney.com.br/mercados/feed/','https://www.noticiasagricolas.com.br/rss/noticias/rss.xml','https://br.investing.com/rss/news_25.rss'];
+          const res=await Promise.all(feeds.map(f=>fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f)}`)));
+          const itens=res.flatMap(r=>r.items||[]).slice(0,10);
+          $('#news').innerHTML=itens.map(i=>`<a href='${i.link}' target='_blank' class='block hover:underline'>• ${i.title}</a>`).join('');
+        }catch{$('#news').innerHTML='<p>Erro ao carregar notícias.</p>';} finally{$('#news-loading')?.remove();}
+      }
 
       loadWeather();
       loadCommodities();
@@ -165,3 +139,4 @@
     </script>
   </body>
 </html>
+

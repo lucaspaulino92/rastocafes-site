@@ -73,77 +73,80 @@
     </footer>
 
     <script>
-      /* Supabase */
-      const SUPABASE_URL='https://spgfbcmzlbuaznegjreu.supabase.co';
-      const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwZ2ZiY216bGJ1YXpuZWdqcmV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTUyNTksImV4cCI6MjA1OTk5MTI1OX0.lq9_YHkrGVChYzkYL3uvr6CZ3pN2RBa0MJQp0wz3-X0';
-      const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+      const SUPABASE_URL = 'https://spgfbcmzlbuaznegjreu.supabase.co';
+      const SUPABASE_ANON = 'eyJhbGciOiJIUz...';
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const $ = s => document.querySelector(s);
+      const fetchJSON = u => fetch(u).then(r => r.json());
+      const ALPHA_KEY = '5TDXOCJ21L6A7P4Z';
 
-      /* Utils */
-      const $=s=>document.querySelector(s);
-      const fetchJSON=u=>fetch(u).then(r=>r.json());
-      const ALPHA_KEY='5TDXOCJ21L6A7P4Z';
-
-      /* Login Handlers */
-      $('#loginBtn').onclick=()=>$('#loginModal').classList.remove('hidden');
-      $('#closeModal').onclick=()=>$('#loginModal').classList.add('hidden');
-      $('#submitLogin').onclick=async()=>{
+      $('#loginBtn').onclick = () => $('#loginModal').classList.remove('hidden');
+      $('#closeModal').onclick = () => $('#loginModal').classList.add('hidden');
+      $('#submitLogin').onclick = async () => {
         $('#loginError').classList.add('hidden');
-        const {error}=await sb.auth.signInWithPassword({email:$('#emailInput').value,password:$('#passwordInput').value});
-        if(error){$('#loginError').textContent='Credenciais inválidas';$('#loginError').classList.remove('hidden');return;}
-        location.href='painel.html';
+        const { error } = await sb.auth.signInWithPassword({ email: $('#emailInput').value, password: $('#passwordInput').value });
+        if (error) {
+          $('#loginError').textContent = 'Credenciais inválidas';
+          $('#loginError').classList.remove('hidden');
+          return;
+        }
+        location.href = 'painel.html';
       };
-      $('#logoutBtn').onclick=async()=>{await sb.auth.signOut();$('#logoutBtn').classList.add('hidden');$('#loginBtn').classList.remove('hidden');};
-      sb.auth.getSession().then(({data:{session}})=>{if(session){$('#loginBtn').classList.add('hidden');$('#logoutBtn').classList.remove('hidden');}});
+      $('#logoutBtn').onclick = async () => { await sb.auth.signOut(); $('#logoutBtn').classList.add('hidden'); $('#loginBtn').classList.remove('hidden'); };
+      sb.auth.getSession().then(({ data: { session } }) => { if (session) { $('#loginBtn').classList.add('hidden'); $('#logoutBtn').classList.remove('hidden'); } });
 
-      /* Weather */
-      async function loadWeather(){
-        if(!navigator.geolocation){$('#weather').innerHTML='<p>Geolocalização não suportada.</p>';return;}
-        navigator.geolocation.getCurrentPosition(async({coords})=>{
-          const api=`https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
-          try{
-            const data=await fetchJSON(api);
-            const codes={0:'☀️ Céu limpo',1:'🌤️ Claro',2:'⛅ Parcial',3:'☁️ Nublado',61:'🌧️ Chuva',80:'🌦️ Pancadas',95:'⛈️ Trovoada'};
-            const cw=data.current_weather;
-            const top=`<p class='text-xl'><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode]||'--'}</p><p class='text-xs text-gray-600'>Atualizado: ${new Date(cw.time).toLocaleTimeString('pt-BR')}</p>`;
-            const labels=[],mins=[],maxs=[],rows=data.daily.time.map((t,i)=>{labels.push(new Date(t).toLocaleDateString('pt-BR',{weekday:'short'}));mins.push(data.daily.temperature_2m_min[i]);maxs.push(data.daily.temperature_2m_max[i]);return`<tr><td>${labels[i]}</td><td>${mins[i]}°C</td><td>${maxs[i]}°C</td></tr>`;}).join('');
-            $('#weather').innerHTML=top+`<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
-            new Chart($('#weatherChart'),{type:'line',data:{labels,datasets:[{label:'Min',data:mins,borderColor:'#60A5FA',backgroundColor:'transparent'},{label:'Max',data:maxs,borderColor:'#F59E0B',backgroundColor:'transparent'}]}});
-          }catch{$('#weather').innerHTML='<p>Erro ao carregar clima.</p>';}
+      async function loadWeather() {
+        if (!navigator.geolocation) { $('#weather').innerHTML = '<p>Geolocalização não suportada.</p>'; return; }
+        navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+          const api = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
+          try {
+            const data = await fetchJSON(api);
+            const codes = { 0: '☀️ Céu limpo', 1: '🌤️ Claro', 2: '⛅ Parcial', 3: '☁️ Nublado', 61: '🌧️ Chuva', 80: '🌦️ Pancadas', 95: '⛈️ Trovoada' };
+            const cw = data.current_weather;
+            const top = `<p class='text-xl'><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode] || '--'}</p><p class='text-xs text-gray-600'>Atualizado: ${new Date(cw.time).toLocaleTimeString('pt-BR')}</p>`;
+            const labels = [], mins = [], maxs = [], rows = data.daily.time.map((t, i) => {
+              const d = new Date(t);
+              labels.push(d.toLocaleDateString('pt-BR', { weekday: 'short' }));
+              mins.push(data.daily.temperature_2m_min[i]);
+              maxs.push(data.daily.temperature_2m_max[i]);
+              return `<tr><td>${labels[i]}</td><td>${mins[i]}°C</td><td>${maxs[i]}°C</td></tr>`;
+            }).join('');
+            $('#weather').innerHTML = top + `<table><thead><tr><th>Dia</th><th>Mín</th><th>Máx</th></tr></thead><tbody>${rows}</tbody></table>`;
+            new Chart($('#weatherChart'), { type: 'line', data: { labels, datasets: [{ label: 'Min', data: mins, borderColor: '#60A5FA', backgroundColor: 'transparent' }, { label: 'Max', data: maxs, borderColor: '#F59E0B', backgroundColor: 'transparent' }] } });
+          } catch { $('#weather').innerHTML = '<p>Erro ao carregar clima.</p>'; }
           $('#weather-loading')?.remove();
-        },()=>{$('#weather').innerHTML='<p>Permita localização.</p>';$('#weather-loading')?.remove();});
+        }, () => { $('#weather').innerHTML = '<p>Permita localização.</p>'; $('#weather-loading')?.remove(); });
       }
 
-      /* Commodities */
-      async function loadCommodities(){
-        try{
-          const map={'Café (ICE)':'KC=F','Soja (CBOT)':'ZS=F','Milho (CBOT)':'ZC=F'};
-          const brl=await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
-          const usdbrl=parseFloat(brl['Realtime Currency Exchange Rate']?.['5. Exchange Rate'])||5;
-          const rows=await Promise.all(Object.entries(map).map(async([n,s])=>{const q=await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${s}&apikey=${ALPHA_KEY}`);const p=parseFloat(q['Global Quote']?.['05. price'])||0;return`<tr><td>${n}</td><td>R$ ${(p*usdbrl).toFixed(2)}</td></tr>`;}));
-          $('#commodities').innerHTML=`<table><thead><tr><th>Produto</th><th>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
-        }catch{$('#commodities').innerHTML='<p>Erro ao carregar cotações.</p>';}
+      async function loadCommodities() {
+        try {
+          const map = { 'Café (ICE)': 'KC=F', 'Soja (CBOT)': 'ZS=F', 'Milho (CBOT)': 'ZC=F' };
+          const brl = await fetchJSON(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=BRL&apikey=${ALPHA_KEY}`);
+          const usdbrl = parseFloat(brl['Realtime Currency Exchange Rate']?.['5. Exchange Rate']) || 5;
+          const rows = await Promise.all(Object.entries(map).map(async ([n, s]) => {
+            const q = await fetchJSON(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${s}&apikey=${ALPHA_KEY}`);
+            const p = parseFloat(q['Global Quote']?.['05. price']) || 0;
+            return `<tr><td>${n}</td><td>R$ ${(p * usdbrl).toFixed(2)}</td></tr>`;
+          }));
+          $('#commodities').innerHTML = `<table><thead><tr><th>Produto</th><th>Preço</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+        } catch { $('#commodities').innerHTML = '<p>Erro ao carregar cotações.</p>'; }
         $('#commodities-loading')?.remove();
       }
 
-      /* Notícias */
-      async function loadNews(){
-        try{
-          const feeds=['https://www.infomoney.com.br/mercados/feed/','https://www.noticiasagricolas.com.br/rss/noticias/rss.xml','https://br.investing.com/rss/news_25.rss'];
-                    const res=await Promise.all(feeds.map(f => fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f)}`)));
-          const items = res.flatMap(r => r.items || []).slice(0, 10);
-          $('#news').innerHTML = items.map(i => 
-            `<a href="${i.link}" target="_blank" class="block hover:underline">• ${i.title}</a>`
-          ).join('');
-        } catch {
-          $('#news').innerHTML = '<p>Erro ao carregar notícias.</p>';
-        } finally {
-          $('#news-loading')?.remove();
-        }
+      async function loadNews() {
+        try {
+          const feeds = ['https://www.infomoney.com.br/mercados/feed/', 'https://www.noticiasagricolas.com.br/rss/noticias/rss.xml', 'https://br.investing.com/rss/news_25.rss'];
+          const res = await Promise.all(feeds.map(f => fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f)}`)));
+          const itens = res.flatMap(r => r.items || []).slice(0, 10);
+          $('#news').innerHTML = itens.map(i => `<a href='${i.link}' target='_blank' class='block hover:underline'>• ${i.title}</a>`).join('');
+        } catch { $('#news').innerHTML = '<p>Erro ao carregar notícias.</p>'; }
+        $('#news-loading')?.remove();
       }
 
-      // Executar carregamentos
       loadWeather();
       loadCommodities();
       loadNews();
-
+    </script>
+  </body>
+</html>
 

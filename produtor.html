@@ -136,10 +136,7 @@
         }
       });
 
-      /* ========== UTIL ========== */
-      const fetchJSON = (url) => fetch(url).then(r => r.json());
-      const ALPHA_KEY = '5TDXOCJ21L6A7P4Z'; // sua key
-
+    
       /* ========== PREVISÃO DO TEMPO ========== */
       async function loadWeather() {
         if (!navigator.geolocation) {

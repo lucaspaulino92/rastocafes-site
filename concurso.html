@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Concurso de Café - Rasto Cafés</title>
   <script src="https://cdn.tailwindcss.com"></script>
-<style>
+  <style>
     body {
       background-color: #B68A55; /* marrom claro */
       color: #2d2d2d;
@@ -19,78 +19,61 @@
   </style>
 </head>
 <body>
-  
   <!-- Hero -->
-  <section class="relative overflow-hidden bg-gradient-to-b from-amber-50 to-neutral-50">
-    <div class="mx-auto max-w-6xl px-4 py-16 md:py-24">
-      <div class="grid gap-8 md:grid-cols-2 items-center">
-        <div>
-          <span class="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">Edição 2025</span>
-          <h1 class="mt-4 text-4xl font-extrabold tracking-tight md:text-5xl">Concurso Municipal de Qualidade de Cafés</h1>
-          <p class="mt-4 text-neutral-700 leading-relaxed">
-            •	Incentivar a constante melhoria da qualidade dos cafés do Município de São Tomás de Aquino, como meio mais eficaz na conquista de novos mercados, agregarem valor ao produto e atender à crescente demanda por produtos diferenciados.
-            Divulgar os diferentes perfis de qualidades dos cafés do município de São Tomás de Aquino - MG.
-          </p>
-          <div class="mt-6 flex flex-wrap gap-3">
-            <a href="#produtores" class="rounded-2xl border border-neutral-300 px-5 py-3 font-semibold hover:bg-white shadow-sm transition">Informações ao Produtor</a>
-            <a href="#patrocinio" class="rounded-2xl bg-amber-600 px-5 py-3 text-white font-semibold shadow hover:bg-amber-700 transition">Cotas de Patrocínio</a>
-          </div>
-          <ul class="mt-6 flex flex-wrap gap-6 text-sm text-neutral-600">
-            <li>📍 São Tomás de Aquino e região</li>
-            <li>📅 Inscrições — consulte o cronograma</li>
-            <li>🏆 Premiações por categoria</li>
-          </ul>
-        </div>
-        <div class="relative">
-          <div class="rounded-3xl bg-white p-4 shadow-xl">
-            <img src="concurso-cafe-hero.jpg" alt="Concurso de café" class="rounded-2xl w-full h-auto object-cover" />
-          </div>
-          <p class="mt-3 text-xs text-neutral-500">Substitua a imagem em /concurso-cafe-hero.jpg</p>
-        </div>
-      </div>
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-6xl px-4 py-16 md:py-24 text-center">
+      <span class="inline-block rounded-full bg-white px-3 py-1 text-xs font-medium text-amber-800">Edição 2025</span>
+      <h1 class="mt-4 text-4xl font-extrabold tracking-tight md:text-5xl text-white drop-shadow-lg">Concurso Municipal de Qualidade de Cafés</h1>
+      <p class="mt-4 max-w-2xl mx-auto text-lg text-white drop-shadow-md">
+        Valorizando produtores, fortalecendo nossa cafeicultura e conectando marcas a um público apaixonado por café.
+      </p>
     </div>
   </section>
 
   <!-- Cronograma -->
   <section id="cronograma" class="mx-auto max-w-6xl px-4 py-12">
-    <h2 class="text-2xl md:text-3xl font-bold">Cronograma</h2>
-    <div class="mt-6 grid gap-4 md:grid-cols-4">
-      <div class="rounded-2xl border bg-white p-4 shadow-sm">
-        <p class="text-sm text-neutral-500">Lançamento do edital</p>
-        <p class="mt-1 text-lg font-semibold">01/08/2025</p>
-      </div>
-      <div class="rounded-2xl border bg-white p-4 shadow-sm">
-        <p class="text-sm text-neutral-500">Inscrições</p>
-        <p class="mt-1 text-lg font-semibold">01/08 a 12/09/2025</p>
-      </div>
-      <div class="rounded-2xl border bg-white p-4 shadow-sm">
-        <p class="text-sm text-neutral-500">Classificação & Provas</p>
-        <p class="mt-1 text-lg font-semibold">Outubro/2025</p>
-      </div>
-      <div class="rounded-2xl border bg-white p-4 shadow-sm">
-        <p class="text-sm text-neutral-500">Premiação</p>
-        <p class="mt-1 text-lg font-semibold">08 de Outubro de 2025</p>
+    <div class="section-bg">
+      <h2 class="text-2xl md:text-3xl font-bold mb-6">Cronograma</h2>
+      <div class="grid gap-4 md:grid-cols-4">
+        <div class="rounded-2xl border bg-white p-4 shadow-sm">
+          <p class="text-sm text-neutral-500">Lançamento do edital</p>
+          <p class="mt-1 text-lg font-semibold">20/08/2025</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-4 shadow-sm">
+          <p class="text-sm text-neutral-500">Inscrições</p>
+          <p class="mt-1 text-lg font-semibold">21/08 a 30/09/2025</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-4 shadow-sm">
+          <p class="text-sm text-neutral-500">Classificação & Provas</p>
+          <p class="mt-1 text-lg font-semibold">Outubro/2025</p>
+        </div>
+        <div class="rounded-2xl border bg-white p-4 shadow-sm">
+          <p class="text-sm text-neutral-500">Premiação</p>
+          <p class="mt-1 text-lg font-semibold">Novembro/2025</p>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Regulamento & Downloads -->
   <section id="regulamento" class="mx-auto max-w-6xl px-4 py-12">
-    <div class="grid gap-8 md:grid-cols-2">
+    <div class="section-bg grid gap-8 md:grid-cols-2">
       <div>
         <h2 class="text-2xl md:text-3xl font-bold">Regulamento e Materiais</h2>
-        <p class="mt-3 text-neutral-700">Baixe os documentos oficiais do concurso.</p>
+        <p class="mt-3">Baixe os documentos oficiais do concurso.</p>
         <div class="mt-6 space-y-3">
           <a class="block rounded-2xl border bg-white px-4 py-3 shadow-sm hover:shadow" href="regulamento-concurso-cafe.pdf" target="_blank" rel="noreferrer">📄 Regulamento (PDF)</a>
-          <a class="block rounded-2xl border bg-white px-4 py-3 shadow-sm hover:shadow" href="ficha-amostra.xlsx" target="_blank" rel="noreferrer">📊 Ficha de Inscrição </a>
+          <a class="block rounded-2xl border bg-white px-4 py-3 shadow-sm hover:shadow" href="edital-concurso-cafe.pdf" target="_blank" rel="noreferrer">📄 Edital (PDF)</a>
+          <a class="block rounded-2xl border bg-white px-4 py-3 shadow-sm hover:shadow" href="cronograma-concurso-cafe.pdf" target="_blank" rel="noreferrer">📄 Cronograma (PDF)</a>
+          <a class="block rounded-2xl border bg-white px-4 py-3 shadow-sm hover:shadow" href="ficha-amostra.xlsx" target="_blank" rel="noreferrer">📊 Ficha de Amostra (XLSX)</a>
         </div>
       </div>
       <div class="rounded-3xl border bg-white p-6 shadow-sm">
         <h3 class="text-lg font-bold">Categorias & Critérios (resumo)</h3>
-        <ul class="mt-3 list-disc pl-5 text-sm text-neutral-700 space-y-1">
-          <li>Natural e Experimental</li>
-          <li>Produtores de café do município de São Tomás de Aquino - MG</li>
-          <li>Notas sensoriais, umidade e tipo</li>
+        <ul class="mt-3 list-disc pl-5 text-sm space-y-1">
+          <li>Arábica Natural e Cereja Descascado</li>
+          <li>Produtor Pequeno, Médio e Grande (definir faixas)</li>
+          <li>Notas sensoriais, defeitos, umidade e tipo</li>
           <li>Rastreabilidade e boas práticas</li>
         </ul>
         <p class="mt-3 text-xs text-neutral-500">Detalhes completos no Regulamento.</p>
@@ -100,24 +83,24 @@
 
   <!-- Produtores -->
   <section id="produtores" class="mx-auto max-w-6xl px-4 py-12">
-    <div class="rounded-3xl border bg-white p-6 shadow-sm">
+    <div class="section-bg">
       <div class="md:flex md:items-center md:justify-between">
         <div>
           <h2 class="text-2xl md:text-3xl font-bold">Informações ao Produtor</h2>
-          <p class="mt-2 text-neutral-700">Como participar, requisitos das amostras e prazos.</p>
+          <p class="mt-2">Como participar, requisitos das amostras e prazos.</p>
         </div>
         <a href="cronograma-concurso-cafe.pdf" target="_blank" rel="noreferrer" class="mt-4 md:mt-0 inline-flex items-center rounded-2xl bg-emerald-600 px-5 py-3 text-white font-semibold shadow hover:bg-emerald-700 transition">Ver prazos completos (PDF)</a>
       </div>
       <div class="mt-6 grid gap-4 md:grid-cols-3">
-        <div class="rounded-2xl border p-4">
+        <div class="rounded-2xl border bg-white p-4">
           <p class="text-sm text-neutral-500">Entrega de Amostras</p>
-          <p class="mt-1 font-semibold">Até 12/09/2025, 17h</p>
+          <p class="mt-1 font-semibold">Até 30/09/2025, 17h</p>
         </div>
-        <div class="rounded-2xl border p-4">
+        <div class="rounded-2xl border bg-white p-4">
           <p class="text-sm text-neutral-500">Volume mínimo</p>
-          <p class="mt-1 font-semibold">2 kg (16 acima, tipo 2 - amostra representativa)</p>
+          <p class="mt-1 font-semibold">300 g (amostra representativa)</p>
         </div>
-        <div class="rounded-2xl border p-4">
+        <div class="rounded-2xl border bg-white p-4">
           <p class="text-sm text-neutral-500">Documentos</p>
           <p class="mt-1 font-semibold">Ficha da amostra + RG + CAR (se houver)</p>
         </div>
@@ -127,64 +110,67 @@
 
   <!-- Patrocínio -->
   <section id="patrocinio" class="mx-auto max-w-6xl px-4 py-12">
-    <h2 class="text-2xl md:text-3xl font-bold">Cotas de Patrocínio</h2>
-    <p class="mt-2 text-neutral-700">Fortaleça a cadeia do café e conecte sua marca a produtores e consumidores.</p>
-    <div class="mt-6 grid gap-6 md:grid-cols-3">
-      <div class="rounded-3xl border bg-white p-6 shadow-sm">
-        <h3 class="text-xl font-bold">Ouro</h3>
-        <p class="mt-1 text-neutral-500">Contribuição sugerida</p>
-        <p class="mt-1 text-2xl font-extrabold">R$ X.000+</p>
-        <ul class="mt-3 list-disc pl-5 text-sm text-neutral-700 space-y-1">
-          <li>Logo em destaque</li>
-          <li>Citação no palco</li>
-          <li>Banner exclusivo</li>
-        </ul>
-      </div>
-      <div class="rounded-3xl border bg-white p-6 shadow-sm">
-        <h3 class="text-xl font-bold">Prata</h3>
-        <p class="mt-1 text-neutral-500">Contribuição sugerida</p>
-        <p class="mt-1 text-2xl font-extrabold">R$ X.000+</p>
-        <ul class="mt-3 list-disc pl-5 text-sm text-neutral-700 space-y-1">
-          <li>Logo em materiais</li>
-          <li>Citação na cerimônia</li>
-          <li>Mesa expositora</li>
-        </ul>
-      </div>
-      <div class="rounded-3xl border bg-white p-6 shadow-sm">
-        <h3 class="text-xl font-bold">Bronze</h3>
-        <p class="mt-1 text-neutral-500">Contribuição sugerida</p>
-        <p class="mt-1 text-2xl font-extrabold">R$ X.000+</p>
-        <ul class="mt-3 list-disc pl-5 text-sm text-neutral-700 space-y-1">
-          <li>Logo no site</li>
-          <li>Menção nas redes</li>
-          <li>Kit degustação</li>
-        </ul>
+    <div class="section-bg">
+      <h2 class="text-2xl md:text-3xl font-bold">Cotas de Patrocínio</h2>
+      <p class="mt-2">Fortaleça a cadeia do café e conecte sua marca a produtores e consumidores.</p>
+      <div class="mt-6 grid gap-6 md:grid-cols-3">
+        <div class="rounded-3xl border bg-white p-6 shadow-sm">
+          <h3 class="text-xl font-bold">Ouro</h3>
+          <p class="mt-1 text-neutral-500">Contribuição sugerida</p>
+          <p class="mt-1 text-2xl font-extrabold">R$ 5.000+</p>
+          <ul class="mt-3 list-disc pl-5 text-sm space-y-1">
+            <li>Logo em destaque</li>
+            <li>Citação no palco</li>
+            <li>Banner exclusivo</li>
+          </ul>
+        </div>
+        <div class="rounded-3xl border bg-white p-6 shadow-sm">
+          <h3 class="text-xl font-bold">Prata</h3>
+          <p class="mt-1 text-neutral-500">Contribuição sugerida</p>
+          <p class="mt-1 text-2xl font-extrabold">R$ 3.000+</p>
+          <ul class="mt-3 list-disc pl-5 text-sm space-y-1">
+            <li>Logo em materiais</li>
+            <li>Citação na cerimônia</li>
+            <li>Mesa expositora</li>
+          </ul>
+        </div>
+        <div class="rounded-3xl border bg-white p-6 shadow-sm">
+          <h3 class="text-xl font-bold">Bronze</h3>
+          <p class="mt-1 text-neutral-500">Contribuição sugerida</p>
+          <p class="mt-1 text-2xl font-extrabold">R$ 1.000+</p>
+          <ul class="mt-3 list-disc pl-5 text-sm space-y-1">
+            <li>Logo no site</li>
+            <li>Menção nas redes</li>
+            <li>Kit degustação</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Apoiadores -->
   <section class="mx-auto max-w-6xl px-4 pb-16">
-    <h2 class="text-2xl md:text-3xl font-bold">Apoiadores e Parceiros</h2>
-    <p class="mt-2 text-neutral-700">Quer sua marca aqui? Entre em contato pelos canais oficiais.</p>
-    <div class="mt-6 grid grid-cols-2 gap-6 md:grid-cols-6 items-center">
-      <div class="flex h-16 items-center justify-center rounded-xl border bg-white p-3 shadow-sm">
-        <img src="logo1.png" alt="Logo 1" class="max-h-10 w-auto object-contain" />
+    <div class="section-bg">
+      <h2 class="text-2xl md:text-3xl font-bold">Apoiadores e Parceiros</h2>
+      <p class="mt-2">Quer sua marca aqui? Entre em contato pelos canais oficiais.</p>
+      <div class="mt-6 grid grid-cols-2 gap-6 md:grid-cols-6 items-center">
+        <div class="flex h-16 items-center justify-center rounded-xl border bg-white p-3 shadow-sm">
+          <img src="logo1.png" alt="Logo 1" class="max-h-10 w-auto object-contain" />
+        </div>
+        <div class="flex h-16 items-center justify-center rounded-xl border bg-white p-3 shadow-sm">
+          <img src="logo2.png" alt="Logo 2" class="max-h-10 w-auto object-contain" />
+        </div>
+        <div class="flex h-16 items-center justify-center rounded-xl border bg-white p-3 shadow-sm">
+          <img src="logo3.png" alt="Logo 3" class="max-h-10 w-auto object-contain" />
+        </div>
       </div>
-      <div class="flex h-16 items-center justify-center rounded-xl border bg-white p-3 shadow-sm">
-        <img src="logo2.png" alt="Logo 2" class="max-h-10 w-auto object-contain" />
-      </div>
-      <div class="flex h-16 items-center justify-center rounded-xl border bg-white p-3 shadow-sm">
-        <img src="logo3.png" alt="Logo 3" class="max-h-10 w-auto object-contain" />
-      </div>
-      <!-- adicione mais logos conforme necessário -->
     </div>
   </section>
 
   <!-- Rodapé -->
   <footer class="border-t bg-white">
-    <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-neutral-500">
-      © <script>document.write(new Date().getFullYear())</script> Concurso Municipal de Qualidade dos Cafés de São Tomás de Aquino - MG
+    <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-neutral-800">
+      © <script>document.write(new Date().getFullYear())</script> Rasto Cafés — Concurso Municipal de Qualidade de Cafés
     </div>
   </footer>
 </body>

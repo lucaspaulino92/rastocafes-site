@@ -4,40 +4,104 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Área do Produtor - Rasto Cafés</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      body{font-family:'Segoe UI',sans-serif}
-      .loader{border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:24px;height:24px;animation:spin 1s linear infinite}
-      @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-      .card{transition:transform .2s ease}.card:hover{transform:translateY(-4px)}
-      table{width:100%;border-collapse:collapse}
-      th,td{padding:8px;text-align:left;border-bottom:1px solid #ddd}
-      th{background:#f9fafb}
+      body {
+        font-family: "Segoe UI", sans-serif;
+      }
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .card {
+        transition: transform 0.2s ease;
+      }
+      .card:hover {
+        transform: translateY(-4px);
+      }
+      .scrollbar-thin::-webkit-scrollbar {
+        height: 6px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: #d1d5db;
+        border-radius: 999px;
+      }
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
     <!-- Barra superior -->
-    <header class="bg-gradient-to-r from-yellow-700 via-yellow-600 to-yellow-500 text-white py-4 px-6 flex items-center justify-between shadow-lg">
+    <header
+      class="bg-gradient-to-r from-yellow-700 via-yellow-600 to-yellow-500 text-white py-4 px-6 flex items-center justify-between shadow-lg"
+    >
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold drop-shadow-lg">Área do Produtor</h1>
-        <p class="text-xs md:text-sm">Informações dinâmicas para decisões agrícolas mais seguras</p>
+        <h1 class="text-2xl md:text-3xl font-bold drop-shadow-lg">
+          Área do Produtor
+        </h1>
+        <p class="text-xs md:text-sm">
+          Informações dinâmicas para decisões agrícolas mais seguras
+        </p>
       </div>
       <div class="space-x-2">
-        <button id="loginBtn" class="bg-white text-yellow-700 font-semibold px-4 py-2 rounded shadow">Entrar</button>
-        <button id="logoutBtn" class="hidden bg-white text-yellow-700 font-semibold px-4 py-2 rounded shadow">Sair</button>
+        <button
+          id="loginBtn"
+          class="bg-white text-yellow-700 font-semibold px-4 py-2 rounded shadow"
+        >
+          Entrar
+        </button>
+        <button
+          id="logoutBtn"
+          class="hidden bg-white text-yellow-700 font-semibold px-4 py-2 rounded shadow"
+        >
+          Sair
+        </button>
       </div>
     </header>
 
     <!-- Modal Login -->
-    <div id="loginModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+    <div
+      id="loginModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50"
+    >
       <div class="bg-white p-6 rounded-lg w-full max-w-sm space-y-4">
         <h2 class="text-xl font-semibold text-center">Login do Produtor</h2>
-        <input id="emailInput" type="email" placeholder="Email" class="w-full border p-2 rounded">
-        <input id="passwordInput" type="password" placeholder="Senha" class="w-full border p-2 rounded">
-        <button id="submitLogin" class="w-full bg-yellow-600 text-white py-2 rounded">Entrar</button>
-        <button id="closeModal" class="w-full text-sm text-gray-500">Cancelar</button>
+        <input
+          id="emailInput"
+          type="email"
+          placeholder="Email"
+          class="w-full border p-2 rounded"
+        />
+        <input
+          id="passwordInput"
+          type="password"
+          placeholder="Senha"
+          class="w-full border p-2 rounded"
+        />
+        <button
+          id="submitLogin"
+          class="w-full bg-yellow-600 text-white py-2 rounded"
+        >
+          Entrar
+        </button>
+        <button id="closeModal" class="w-full text-sm text-gray-500">
+          Cancelar
+        </button>
         <p id="loginError" class="text-red-600 text-sm hidden"></p>
       </div>
     </div>
@@ -47,43 +111,52 @@
       <section class="bg-white rounded-xl shadow-md p-6 card">
         <h2 class="text-2xl font-semibold mb-4">Previsão do Tempo</h2>
         <div id="weather" class="text-gray-700 space-y-4">
-          <div id="weather-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando previsão...</div>
+          <div id="weather-loading" class="flex items-center gap-2">
+            <span class="loader"></span> Carregando previsão...
+          </div>
         </div>
         <canvas id="weatherChart" height="80"></canvas>
       </section>
-       <!-- CEPEA Widget -->
+
+      <!-- CEPEA Widget -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
-        <h2 class="text-2xl font-semibold mb-4">Indicador do Café Arábica CEPEA/ESALQ</h2>
-        <div class="mb-4">
-          <script type="text/javascript" src="https://www.cepea.org.br/br/widgetproduto.js.php?fonte=arial&tamanho=10&largura=400px&corfundo=dbd6b2&cortexto=333333&corlinha=ede7bf&id_indicador%5B%5D=23"></script>
+        <h2 class="text-2xl font-semibold mb-4">
+          Indicador do Café Arábica CEPEA/ESALQ
+        </h2>
+        <div class="mb-2">
+          <script
+            type="text/javascript"
+            src="https://www.cepea.org.br/br/widgetproduto.js.php?fonte=arial&tamanho=10&largura=400px&corfundo=dbd6b2&cortexto=333333&corlinha=ede7bf&id_indicador%5B%5D=23"
+          ></script>
         </div>
-        <table class="text-sm w-full mb-2">
-          <thead><tr><th>Data</th><th>R$</th><th>Var. Dia</th><th>Var. Mês</th><th>US$</th></tr></thead>
-          <tbody>
-  <tr><td>25/07/2025</td><td>1.809,56</td><td>-0,82%</td><td>-1,35%</td><td>325,05</td></tr>
-  <tr><td>24/07/2025</td><td>1.824,52</td><td>+0,35%</td><td>-0,54%</td><td>330,65</td></tr>
-  <tr><td>23/07/2025</td><td>1.818,16</td><td>+0,92%</td><td>-0,88%</td><td>329,20</td></tr>
-  <tr><td>22/07/2025</td><td>1.801,66</td><td>-0,09%</td><td>-1,78%</td><td>323,69</td></tr>
-  <tr><td>21/07/2025</td><td>1.803,32</td><td>-1,22%</td><td>-1,69%</td><td>323,87</td></tr>
-  <tr><td>18/07/2025</td><td>1.825,66</td><td>+0,54%</td><td>-0,47%</td><td>326,83</td></tr>
-  <tr><td>17/07/2025</td><td>1.815,89</td><td>-0,25%</td><td>-1,01%</td><td>327,37</td></tr>
-  <tr><td>16/07/2025</td><td>1.820,36</td><td>+1,98%</td><td>-0,76%</td><td>327,29</td></tr>
-  <tr><td>15/07/2025</td><td>1.785,02</td><td>+0,07%</td><td>-2,69%</td><td>320,93</td></tr>
-  <tr><td>14/07/2025</td><td>1.783,70</td><td>+3,19%</td><td>-2,76%</td><td>319,37</td></tr>
-  <tr><td>11/07/2025</td><td>1.728,48</td><td>+0,41%</td><td>-5,77%</td><td>311,61</td></tr>
-  <tr><td>10/07/2025</td><td>1.721,50</td><td>+2,13%</td><td>-6,15%</td><td>310,68</td></tr>
-  <tr><td>09/07/2025</td><td>1.685,52</td><td>-0,03%</td><td>-8,11%</td><td>306,85</td></tr>
-  <tr><td>08/07/2025</td><td>1.685,98</td><td>+0,19%</td><td>-8,09%</td><td>309,58</td></tr>
-  <tr><td>07/07/2025</td><td>1.682,70</td><td>-3,12%</td><td>-8,27%</td><td>307,12</td></tr>
-</tbody>
-        </table>
-        <p class="text-xs text-gray-500 mt-1">Fonte: CEPEA/ESALQ – Atualização manual. Uso permitido apenas não-comercial.</p>
       </section>
+
       <!-- Notícias -->
       <section class="bg-white rounded-xl shadow-md p-6 card">
-        <h2 class="text-2xl font-semibold mb-4">Notícias do Setor Agrícola</h2>
+        <h2 class="text-2xl font-semibold mb-4">Notícias do Agro</h2>
+        <p class="text-xs text-gray-500 mb-2">
+          Principais destaques sobre clima, safras e mercado agrícola.
+        </p>
         <div id="news" class="space-y-2 text-gray-700">
-          <div id="news-loading" class="flex items-center gap-2"><span class="loader"></span> Carregando notícias...</div>
+          <div id="news-loading" class="flex items-center gap-2">
+            <span class="loader"></span> Carregando notícias...
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard do Produtor (dados da safra) -->
+      <section
+        id="producerDashboard"
+        class="bg-white rounded-xl shadow-md p-6 card hidden"
+      >
+        <h2 class="text-2xl font-semibold mb-4">Resumo da Minha Produção</h2>
+        <p class="text-xs text-gray-500 mb-4">
+          Esses dados vêm da sua conta na plataforma Cultura de Gestão.
+        </p>
+        <div id="producerDashboardContent" class="space-y-4">
+          <p class="text-sm text-gray-500">
+            Faça login para visualizar o resumo da sua fazenda.
+          </p>
         </div>
       </section>
     </main>
@@ -93,116 +166,496 @@
     </footer>
 
     <script>
-      const SUPABASE_URL = 'https://spgfbcmzlbuaznegjreu.supabase.co';
-      const SUPABASE_ANON = 'eyJhbGciOiJIUz...';
+      const SUPABASE_URL = "https://spgfbcmzlbuaznegjreu.supabase.co";
+      const SUPABASE_ANON = "eyJhbGciOiJIUz..."; // substitua pela sua chave completa
       const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-      const $ = s => document.querySelector(s);
-      const fetchJSON = u => fetch(u).then(r => r.json());
-      
-      $('#loginBtn').onclick = () => $('#loginModal').classList.remove('hidden');
-      $('#closeModal').onclick = () => $('#loginModal').classList.add('hidden');
-      $('#submitLogin').onclick = async () => {
-        $('#loginError').classList.add('hidden');
-        const { error } = await sb.auth.signInWithPassword({ email: $('#emailInput').value, password: $('#passwordInput').value });
-        if (error) {
-          $('#loginError').textContent = 'Credenciais inválidas';
-          $('#loginError').classList.remove('hidden');
+      const $ = (s) => document.querySelector(s);
+      const fetchJSON = (u) => fetch(u).then((r) => r.json());
+
+      /* ====== LOGIN / LOGOUT ====== */
+      $("#loginBtn").onclick = () =>
+        $("#loginModal").classList.remove("hidden");
+      $("#closeModal").onclick = () =>
+        $("#loginModal").classList.add("hidden");
+
+      $("#submitLogin").onclick = async () => {
+        $("#loginError").classList.add("hidden");
+        const email = $("#emailInput").value.trim();
+        const password = $("#passwordInput").value.trim();
+
+        if (!email || !password) {
+          $("#loginError").textContent = "Preencha email e senha.";
+          $("#loginError").classList.remove("hidden");
           return;
         }
-        location.href = 'painel.html';
-      };
-      $('#logoutBtn').onclick = async () => { await sb.auth.signOut(); $('#logoutBtn').classList.add('hidden'); $('#loginBtn').classList.remove('hidden'); };
-      sb.auth.getSession().then(({ data: { session } }) => { if (session) { $('#loginBtn').classList.add('hidden'); $('#logoutBtn').classList.remove('hidden'); } });
 
-async function loadWeather() {
-  if (!navigator.geolocation) {
-    $('#weather').innerHTML = '<p>Geolocalização não suportada.</p>';
-    return;
-  }
+        const { error } = await sb.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-  navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-    const api = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
+        if (error) {
+          console.error(error);
+          $("#loginError").textContent = "Credenciais inválidas.";
+          $("#loginError").classList.remove("hidden");
+          return;
+        }
 
-    try {
-      const data = await fetchJSON(api);
-      const codes = {
-        0: '☀️ Céu limpo', 1: '🌤️ Principalmente claro', 2: '⛅ Parcialmente nublado', 3: '☁️ Nublado',
-        45: '🌫️ Neblina', 48: '🌫️ Neblina gelada',
-        51: '🌦️ Chuvisco leve', 53: '🌦️ Chuvisco moderado', 55: '🌧️ Chuvisco intenso',
-        56: '🌧️ Chuvisco gelado leve', 57: '🌧️ Chuvisco gelado forte',
-        61: '🌧️ Chuva leve', 63: '🌧️ Chuva moderada', 65: '🌧️ Chuva forte',
-        66: '🌨️ Chuva gelada leve', 67: '🌨️ Chuva gelada forte',
-        71: '❄️ Neve leve', 73: '❄️ Neve moderada', 75: '❄️ Neve forte',
-        80: '🌦️ Pancadas leves', 81: '🌦️ Pancadas moderadas', 82: '🌧️ Pancadas fortes',
-        95: '⛈️ Trovoada', 96: '⛈️ Trovoada com granizo leve', 99: '⛈️ Trovoada com granizo forte'
+        $("#loginModal").classList.add("hidden");
+        $("#loginBtn").classList.add("hidden");
+        $("#logoutBtn").classList.remove("hidden");
+        loadProducerDashboard();
       };
 
-      const cw = data.current_weather;
-      const now = `<p class='text-xl'><strong>${cw.temperature}°C</strong> | ${codes[cw.weathercode] || '--'}</p>
-        <p class='text-xs text-gray-600'>Atualizado: ${new Date(cw.time).toLocaleTimeString('pt-BR')}</p>`;
+      $("#logoutBtn").onclick = async () => {
+        await sb.auth.signOut();
+        $("#logoutBtn").classList.add("hidden");
+        $("#loginBtn").classList.remove("hidden");
+        const dash = $("#producerDashboard");
+        const dashContent = $("#producerDashboardContent");
+        if (dash && dashContent) {
+          dash.classList.add("hidden");
+          dashContent.innerHTML =
+            "<p class='text-sm text-gray-500'>Faça login para visualizar o resumo da sua fazenda.</p>";
+        }
+      };
 
-      const labels = [], mins = [], maxs = [];
-      const rows = data.daily.time.map((d, i) => {
-        const date = new Date(d);
-        const dia = date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
-        const cond = codes[data.daily.weathercode[i]] || '--';
-        const min = data.daily.temperature_2m_min[i];
-        const max = data.daily.temperature_2m_max[i];
-        labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
-        mins.push(min);
-        maxs.push(max);
-        return `<tr><td class='py-1 pr-4'>${dia}</td><td class='py-1'>${cond}</td><td class='py-1'>${min}°C / ${max}°C</td></tr>`;
-      }).join('');
-
-      $('#weather').innerHTML = now + `
-        <table class='text-sm mt-4 w-full'>
-          <thead>
-            <tr><th class='text-left pb-1 border-b'>Dia</th><th class='text-left pb-1 border-b'>Condição</th><th class='text-left pb-1 border-b'>Temperaturas</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-
-      new Chart($('#weatherChart'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Min', data: mins, borderColor: '#60A5FA', backgroundColor: 'transparent' },
-            { label: 'Max', data: maxs, borderColor: '#F59E0B', backgroundColor: 'transparent' }
-          ]
-        },
-        options: {
-          plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero: false } }
+      // Checa sessão ao carregar a página
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          $("#loginBtn").classList.add("hidden");
+          $("#logoutBtn").classList.remove("hidden");
+          loadProducerDashboard();
         }
       });
 
-    } catch {
-      $('#weather').innerHTML = '<p>Erro ao carregar clima.</p>';
-    }
+      /* ====== CLIMA ====== */
+      async function loadWeather() {
+        if (!navigator.geolocation) {
+          $("#weather").innerHTML =
+            "<p>Geolocalização não suportada neste dispositivo.</p>";
+          return;
+        }
 
-    $('#weather-loading')?.remove();
+        navigator.geolocation.getCurrentPosition(
+          async ({ coords }) => {
+            const api = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
 
-  }, () => {
-    $('#weather').innerHTML = '<p>Permita localização.</p>';
-    $('#weather-loading')?.remove();
-  });
-}
-      
-       
-      async function loadNews() {
-        try {
-          const feeds = ['https://www.infomoney.com.br/mercados/feed/', 'https://www.noticiasagricolas.com.br/rss/noticias/rss.xml', 'https://br.investing.com/rss/news_25.rss'];
-          const res = await Promise.all(feeds.map(f => fetchJSON(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f)}`)));
-          const itens = res.flatMap(r => r.items || []).slice(0, 10);
-          $('#news').innerHTML = itens.map(i => `<a href='${i.link}' target='_blank' class='block hover:underline'>• ${i.title}</a>`).join('');
-        } catch { $('#news').innerHTML = '<p>Erro ao carregar notícias.</p>'; }
-        $('#news-loading')?.remove();
+            try {
+              const data = await fetchJSON(api);
+              const codes = {
+                0: "Céu limpo",
+                1: "Principalmente claro",
+                2: "Parcialmente nublado",
+                3: "Nublado",
+                45: "Neblina",
+                48: "Neblina gelada",
+                51: "Chuvisco leve",
+                53: "Chuvisco moderado",
+                55: "Chuvisco intenso",
+                56: "Chuvisco gelado leve",
+                57: "Chuvisco gelado forte",
+                61: "Chuva leve",
+                63: "Chuva moderada",
+                65: "Chuva forte",
+                66: "Chuva gelada leve",
+                67: "Chuva gelada forte",
+                71: "Neve leve",
+                73: "Neve moderada",
+                75: "Neve forte",
+                80: "Pancadas leves",
+                81: "Pancadas moderadas",
+                82: "Pancadas fortes",
+                95: "Trovoadas",
+                96: "Trovoadas com granizo leve",
+                99: "Trovoadas com granizo forte",
+              };
+
+              const cw = data.current_weather;
+              const daily = data.daily;
+
+              const labels = [];
+              const mins = [];
+              const maxs = [];
+              const dayCards = [];
+
+              let minWeek = Infinity;
+              let maxWeek = -Infinity;
+              let rainyDays = 0;
+              let hotDays = 0;
+              let coldDays = 0;
+
+              const rainyCodes = [
+                51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99,
+              ];
+
+              daily.time.forEach((d, i) => {
+                const date = new Date(d);
+                const weekday = date.toLocaleDateString("pt-BR", {
+                  weekday: "short",
+                });
+                const dayMonth = date.toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                });
+                const code = daily.weathercode[i];
+                const min = daily.temperature_2m_min[i];
+                const max = daily.temperature_2m_max[i];
+
+                labels.push(weekday);
+                mins.push(min);
+                maxs.push(max);
+
+                if (min < minWeek) minWeek = min;
+                if (max > maxWeek) maxWeek = max;
+
+                if (rainyCodes.includes(code)) rainyDays++;
+                if (max >= 30) hotDays++;
+                if (max <= 22) coldDays++;
+
+                const condText = codes[code] || "Condição indefinida";
+
+                dayCards.push(`
+                  <div class="min-w-[90px] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-center text-xs">
+                    <div class="font-semibold mb-1">${weekday}</div>
+                    <div class="text-[11px] text-gray-500 mb-1">${dayMonth}</div>
+                    <div class="text-[11px] mb-1">${condText}</div>
+                    <div class="font-medium">${min.toFixed(
+                      0
+                    )}°C / ${max.toFixed(0)}°C</div>
+                  </div>
+                `);
+              });
+
+              const currentCond = codes[cw.weathercode] || "Condição indefinida";
+
+              $("#weather").innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <p class="text-sm text-gray-600">Agora na sua região</p>
+                    <p class="text-4xl font-semibold">${cw.temperature.toFixed(
+                      0
+                    )}°C</p>
+                    <p class="text-base">${currentCond}</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                      Atualizado: ${new Date(
+                        cw.time
+                      ).toLocaleTimeString("pt-BR")}
+                    </p>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-xs text-gray-500 mb-1">
+                      Próximos 7 dias (passe o dedo para o lado)
+                    </p>
+                    <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                      ${dayCards.join("")}
+                    </div>
+                  </div>
+                </div>
+                <p
+                  id="weatherSummary"
+                  class="mt-4 text-sm text-gray-700 bg-yellow-50 border border-yellow-100 rounded-lg p-3"
+                ></p>
+              `;
+
+              // Gráfico de linha para quem quiser olhar melhor a variação de temperatura
+              const ctx = $("#weatherChart");
+              if (ctx) {
+                new Chart(ctx, {
+                  type: "line",
+                  data: {
+                    labels,
+                    datasets: [
+                      {
+                        label: "Mínima (°C)",
+                        data: mins,
+                        borderColor: "#60A5FA",
+                        backgroundColor: "transparent",
+                      },
+                      {
+                        label: "Máxima (°C)",
+                        data: maxs,
+                        borderColor: "#F59E0B",
+                        backgroundColor: "transparent",
+                      },
+                    ],
+                  },
+                  options: {
+                    plugins: {
+                      legend: { position: "top" },
+                    },
+                    scales: {
+                      y: { beginAtZero: false },
+                    },
+                  },
+                });
+              }
+
+              // Resumo automático em linguagem simples
+              let tempSentence = "";
+              if (hotDays >= 4) {
+                tempSentence =
+                  "A semana tende a ser mais quente, com vários dias passando de 30°C.";
+              } else if (coldDays >= 4) {
+                tempSentence =
+                  "A semana tende a ser mais fresca, com máximas em torno de 22°C ou menos em vários dias.";
+              } else {
+                tempSentence =
+                  "A temperatura deve ficar moderada, sem extremos muito fortes de calor ou frio.";
+              }
+
+              let rainSentence = "";
+              if (rainyDays >= 4) {
+                rainSentence =
+                  "Há previsão de chuva em boa parte dos dias, o que ajuda na umidade do solo, mas pode atrapalhar operações de colheita e pulverização.";
+              } else if (rainyDays >= 2) {
+                rainSentence =
+                  "Alguns dias terão chuva, alternando com períodos de tempo mais firme.";
+              } else {
+                rainSentence =
+                  "A previsão indica poucos dias com chuva, exigindo atenção à umidade do solo.";
+              }
+
+              const rangeSentence = `As temperaturas devem variar, em média, entre cerca de ${minWeek.toFixed(
+                0
+              )}°C e ${maxWeek.toFixed(
+                0
+              )}°C ao longo da semana aí na sua região.`;
+
+              const adviceSentence =
+                "Use essas informações para planejar colheita, tratos culturais e aplicações, priorizando janelas de tempo firme.";
+
+              $("#weatherSummary").textContent = `${rangeSentence} ${tempSentence} ${rainSentence} ${adviceSentence}`;
+            } catch (e) {
+              console.error(e);
+              $("#weather").innerHTML =
+                "<p>Erro ao carregar a previsão do tempo.</p>";
+            }
+
+            $("#weather-loading")?.remove();
+          },
+          () => {
+            $("#weather").innerHTML =
+              "<p>Permita o acesso à localização para ver a previsão exata da sua região.</p>";
+            $("#weather-loading")?.remove();
+          }
+        );
       }
 
+      /* ====== NOTÍCIAS DO AGRO ====== */
+      async function loadNews() {
+        try {
+          const feeds = [
+            "https://www.noticiasagricolas.com.br/rss/noticias/rss.xml",
+            "https://www.agrolink.com.br/rss/noticias.xml",
+            "https://www.canalrural.com.br/feed/",
+          ];
+
+          const responses = await Promise.all(
+            feeds.map((f) =>
+              fetchJSON(
+                `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(
+                  f
+                )}`
+              )
+            )
+          );
+
+          let items = responses.flatMap((r) => r.items || []);
+
+          const keywords = [
+            "café",
+            "cafeicultura",
+            "safra",
+            "agro",
+            "agrícola",
+            "agricultura",
+            "pecuária",
+            "clima",
+            "chuva",
+            "seca",
+            "fertilizante",
+            "defensivo",
+            "grão",
+            "milho",
+            "soja",
+            "trigo",
+            "commodit",
+          ];
+
+          const filtered = items.filter((i) => {
+            const text = `${i.title || ""} ${i.description || ""}`.toLowerCase();
+            return keywords.some((k) => text.includes(k));
+          });
+
+          if (filtered.length >= 6) {
+            items = filtered;
+          }
+
+          items = items.slice(0, 10);
+
+          if (!items.length) {
+            $("#news").innerHTML =
+              "<p>Não foi possível carregar notícias do agro agora.</p>";
+            $("#news-loading")?.remove();
+            return;
+          }
+
+          const html = items
+            .map((i) => {
+              let host = "";
+              let dateStr = "";
+              try {
+                const url = new URL(i.link);
+                host = url.hostname.replace("www.", "");
+              } catch (e) {
+                host = "";
+              }
+              if (i.pubDate) {
+                dateStr = new Date(i.pubDate).toLocaleDateString("pt-BR");
+              }
+
+              return `
+                <a
+                  href="${i.link}"
+                  target="_blank"
+                  class="block py-2 px-2 rounded hover:bg-gray-50 border-b border-gray-100 transition"
+                >
+                  <span class="block text-sm font-medium">
+                    • ${i.title}
+                  </span>
+                  <span class="block text-[11px] text-gray-500">
+                    ${host ? host : ""}${host && dateStr ? " • " : ""}${
+                dateStr || ""
+              }
+                  </span>
+                </a>
+              `;
+            })
+            .join("");
+
+          $("#news").innerHTML = html;
+        } catch (e) {
+          console.error(e);
+          $("#news").innerHTML =
+            "<p>Erro ao carregar notícias do agro no momento.</p>";
+        }
+
+        $("#news-loading")?.remove();
+      }
+
+      /* ====== DASHBOARD DO PRODUTOR (INTEGRAR COM SUA VIEW) ====== */
+      async function loadProducerDashboard() {
+        const dash = $("#producerDashboard");
+        const dashContent = $("#producerDashboardContent");
+        if (!dash || !dashContent) return;
+
+        dash.classList.remove("hidden");
+        dashContent.innerHTML =
+          "<div class='flex items-center gap-2 text-sm text-gray-600'><span class='loader'></span> Carregando dados da sua fazenda...</div>";
+
+        try {
+          const { data: userData } = await sb.auth.getUser();
+          const user = userData?.user;
+          if (!user) {
+            dashContent.innerHTML =
+              "<p class='text-sm text-gray-500'>Faça login para ver o resumo da sua produção.</p>";
+            return;
+          }
+
+          // TODO: AJUSTE AQUI para a sua view/tabela de resumo do produtor
+          // Exemplo: crie uma view tipo "view_resumo_produtor" no Supabase
+          // com colunas: fazenda_nome, safra_nome, area_total, produtividade_planejada,
+          // producao_planejada, producao_realizada, ultimo_atualizacao
+          const { data, error } = await sb
+            .from("view_resumo_produtor") // <- ajuste o nome
+            .select(
+              "fazenda_nome,safra_nome,area_total,produtividade_planejada,producao_planejada,producao_realizada,ultimo_atualizacao"
+            )
+            .eq("user_id", user.id)
+            .limit(1)
+            .single();
+
+          if (error) {
+            console.error(error);
+            dashContent.innerHTML = `
+              <p class='text-sm text-red-600 mb-2'>
+                Não foi possível carregar automaticamente o resumo da sua produção.
+              </p>
+              <p class='text-xs text-gray-500'>
+                Peça ao seu consultor para conferir se a view <code>view_resumo_produtor</code> está criada e vinculada ao seu usuário.
+              </p>
+            `;
+            return;
+          }
+
+          const fazendaNome = data.fazenda_nome || "Minha fazenda";
+          const safraNome = data.safra_nome || "Safra atual";
+          const areaTotal = data.area_total ?? 0;
+          const prodPlan = data.produtividade_planejada ?? null;
+          const prodReal = data.producao_realizada ?? null;
+          const prodPlanTotal = data.producao_planejada ?? null;
+          const ultimo = data.ultimo_atualizacao
+            ? new Date(data.ultimo_atualizacao).toLocaleDateString("pt-BR")
+            : "-";
+
+          dashContent.innerHTML = `
+            <div class="grid md:grid-cols-3 gap-4">
+              <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
+                <p class="text-xs text-gray-500">Fazenda</p>
+                <p class="text-sm font-semibold">${fazendaNome}</p>
+                <p class="text-xs text-gray-500 mt-1">Safra: ${safraNome}</p>
+                <p class="text-xs text-gray-500 mt-2">Última atualização: ${ultimo}</p>
+              </div>
+
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p class="text-xs text-gray-500">Área total</p>
+                <p class="text-xl font-semibold">${areaTotal.toLocaleString(
+                  "pt-BR"
+                )} ha</p>
+                ${
+                  prodPlan
+                    ? `<p class="text-xs text-gray-500 mt-2">Produtividade planejada: ${prodPlan.toLocaleString(
+                        "pt-BR"
+                      )} sc/ha</p>`
+                    : ""
+                }
+              </div>
+
+              <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p class="text-xs text-gray-500">Produção</p>
+                ${
+                  prodPlanTotal
+                    ? `<p class="text-sm">Planejada: <span class="font-semibold">${prodPlanTotal.toLocaleString(
+                        "pt-BR"
+                      )} sc</span></p>`
+                    : ""
+                }
+                ${
+                  prodReal
+                    ? `<p class="text-sm mt-1">Realizada: <span class="font-semibold">${prodReal.toLocaleString(
+                        "pt-BR"
+                      )} sc</span></p>`
+                    : "<p class='text-sm mt-1 text-gray-500'>Produção realizada ainda não informada.</p>"
+                }
+              </div>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-4">
+              Para detalhes mais completos (custos, serviços e relatórios), acesse o painel principal da plataforma Cultura de Gestão.
+            </p>
+          `;
+        } catch (e) {
+          console.error(e);
+          dashContent.innerHTML =
+            "<p class='text-sm text-red-600'>Erro ao carregar os dados da sua produção.</p>";
+        }
+      }
+
+      // Inicializa
       loadWeather();
       loadNews();
-    </script>  
+    </script>
   </body>
 </html>
 

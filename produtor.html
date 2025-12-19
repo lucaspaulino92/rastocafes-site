@@ -157,22 +157,22 @@
         </div>
       </section>
 
-      <!-- Dashboard do Produtor (dados da safra) -->
-      <section
-        id="producerDashboard"
-        class="bg-white rounded-xl shadow-md p-6 card hidden"
-      >
-        <h2 class="text-2xl font-semibold mb-4">Resumo da Minha Produção</h2>
-        <p class="text-xs text-gray-500 mb-4">
-          Esses dados vêm da sua conta na plataforma Cultura de Gestão.
-        </p>
-        <div id="producerDashboardContent" class="space-y-4">
-          <p class="text-sm text-gray-500">
-            Faça login para visualizar o resumo da sua fazenda.
-          </p>
-        </div>
-      </section>
-    </main>
+     <!-- Dashboard do Produtor (dados da safra) -->
+<section
+  id="producerDashboard"
+  class="bg-white rounded-xl shadow-md p-6 card hidden"
+>
+  <h2 class="text-2xl font-semibold mb-4">Resumo da Minha Produção</h2>
+  <p class="text-xs text-gray-500 mb-4">
+    Esses dados vêm da sua conta na plataforma Cultura de Gestão.
+  </p>
+  <div id="producerDashboardContent" class="space-y-4">
+    <p class="text-sm text-gray-500">
+      Faça login para visualizar o resumo da sua fazenda.
+    </p>
+  </div>
+</section>
+
 
     <footer class="py-6 bg-gray-800 text-white text-center">
       <p>&copy; 2025 Rasto Cafés. Todos os direitos reservados.</p>
@@ -185,61 +185,187 @@
       const $ = (s) => document.querySelector(s);
       const fetchJSON = (u) => fetch(u).then((r) => r.json());
 
-      /* ====== LOGIN / LOGOUT ====== */
-      $("#loginBtn").onclick = () =>
-        $("#loginModal").classList.remove("hidden");
-      $("#closeModal").onclick = () =>
-        $("#loginModal").classList.add("hidden");
+/* ====== LOGIN / LOGOUT E SESSÃO ====== */
 
-      $("#submitLogin").onclick = async () => {
-        $("#loginError").classList.add("hidden");
-        const email = $("#emailInput").value.trim();
-        const password = $("#passwordInput").value.trim();
+// abrir/fechar modal
+$('#loginBtn').onclick = () => $('#loginModal').classList.remove('hidden');
+$('#closeModal').onclick = () => $('#loginModal').classList.add('hidden');
 
-        if (!email || !password) {
-          $("#loginError").textContent = "Preencha email e senha.";
-          $("#loginError").classList.remove("hidden");
-          return;
-        }
+// login
+$('#submitLogin').onclick = async () => {
+  $('#loginError').classList.add('hidden');
 
-        const { error } = await sb.auth.signInWithPassword({
-          email,
-          password,
-        });
+  const email = $('#emailInput').value.trim();
+  const password = $('#passwordInput').value.trim();
 
-        if (error) {
-          console.error(error);
-          $("#loginError").textContent = "Credenciais inválidas.";
-          $("#loginError").classList.remove("hidden");
-          return;
-        }
+  if (!email || !password) {
+    $('#loginError').textContent = 'Preencha email e senha.';
+    $('#loginError').classList.remove('hidden');
+    return;
+  }
 
-        $("#loginModal").classList.add("hidden");
-        $("#loginBtn").classList.add("hidden");
-        $("#logoutBtn").classList.remove("hidden");
-        loadProducerDashboard();
-      };
+  // evita clique duplo
+  $('#submitLogin').disabled = true;
+  $('#submitLogin').textContent = 'Entrando...';
 
-      $("#logoutBtn").onclick = async () => {
-        await sb.auth.signOut();
-        $("#logoutBtn").classList.add("hidden");
-        $("#loginBtn").classList.remove("hidden");
-        const dash = $("#producerDashboard");
-        const dashContent = $("#producerDashboardContent");
-        if (dash && dashContent) {
-          dash.classList.add("hidden");
-          dashContent.innerHTML =
-            "<p class='text-sm text-gray-500'>Faça login para visualizar o resumo da sua fazenda.</p>";
-        }
-      };
+  const { error } = await sb.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-      sb.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          $("#loginBtn").classList.add("hidden");
-          $("#logoutBtn").classList.remove("hidden");
-          loadProducerDashboard();
-        }
-      });
+  $('#submitLogin').disabled = false;
+  $('#submitLogin').textContent = 'Entrar';
+
+  if (error) {
+    console.error(error);
+    $('#loginError').textContent = 'Credenciais inválidas.';
+    $('#loginError').classList.remove('hidden');
+    return;
+  }
+
+  // sucesso
+  $('#loginModal').classList.add('hidden');
+  $('#loginBtn').classList.add('hidden');
+  $('#logoutBtn').classList.remove('hidden');
+
+  // carrega o resumo da fazenda do produtor
+  loadProducerDashboard();
+};
+
+// logout
+$('#logoutBtn').onclick = async () => {
+  await sb.auth.signOut();
+  $('#logoutBtn').classList.add('hidden');
+  $('#loginBtn').classList.remove('hidden');
+
+  const dash = $('#producerDashboard');
+  const dashContent = $('#producerDashboardContent');
+  if (dash && dashContent) {
+    dash.classList.add('hidden');
+    dashContent.innerHTML =
+      "<p class='text-sm text-gray-500'>Faça login para visualizar o resumo da sua fazenda.</p>";
+  }
+};
+
+// ao carregar a página, verifica se já existe sessão
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    $('#loginBtn').classList.add('hidden');
+    $('#logoutBtn').classList.remove('hidden');
+    loadProducerDashboard();
+  }
+});
+
+      /* ====== DASHBOARD DO PRODUTOR ====== */
+
+async function loadProducerDashboard() {
+  const dash = $('#producerDashboard');
+  const dashContent = $('#producerDashboardContent');
+  if (!dash || !dashContent) return;
+
+  dash.classList.remove('hidden');
+  dashContent.innerHTML =
+    "<div class='flex items-center gap-2 text-sm text-gray-600'><span class='loader'></span> Carregando dados da sua fazenda...</div>";
+
+  try {
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData?.user;
+
+    if (!user) {
+      dashContent.innerHTML =
+        "<p class='text-sm text-gray-500'>Faça login para ver o resumo da sua produção.</p>";
+      return;
+    }
+
+    // IMPORTANTE:
+    // Ajuste aqui o nome da view e os campos conforme você criar no Supabase.
+    // Exemplo de view: view_resumo_produtor (user_id, fazenda_nome, safra_nome, area_total, produtividade_planejada, producao_planejada, producao_realizada, ultimo_atualizacao)
+
+    const { data, error } = await sb
+      .from('view_resumo_produtor') // troque se usar outro nome
+      .select(
+        'fazenda_nome,safra_nome,area_total,produtividade_planejada,producao_planejada,producao_realizada,ultimo_atualizacao'
+      )
+      .eq('user_id', user.id)
+      .limit(1)
+      .single();
+
+    if (error) {
+      console.error(error);
+      dashContent.innerHTML = `
+        <p class='text-sm text-red-600 mb-2'>
+          Não foi possível carregar automaticamente o resumo da sua produção.
+        </p>
+        <p class='text-xs text-gray-500'>
+          Peça ao seu consultor para conferir se a view <code>view_resumo_produtor</code> está criada e vinculada ao seu usuário no Supabase.
+        </p>
+      `;
+      return;
+    }
+
+    const fazendaNome = data.fazenda_nome || 'Minha fazenda';
+    const safraNome = data.safra_nome || 'Safra atual';
+    const areaTotal = data.area_total ?? 0;
+    const prodPlan = data.produtividade_planejada ?? null;
+    const prodReal = data.producao_realizada ?? null;
+    const prodPlanTotal = data.producao_planejada ?? null;
+    const ultimo = data.ultimo_atualizacao
+      ? new Date(data.ultimo_atualizacao).toLocaleDateString('pt-BR')
+      : '-';
+
+    dashContent.innerHTML = `
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
+          <p class="text-xs text-gray-500">Fazenda</p>
+          <p class="text-sm font-semibold">${fazendaNome}</p>
+          <p class="text-xs text-gray-500 mt-1">Safra: ${safraNome}</p>
+          <p class="text-xs text-gray-500 mt-2">Última atualização: ${ultimo}</p>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="text-xs text-gray-500">Área total</p>
+          <p class="text-xl font-semibold">${areaTotal.toLocaleString(
+            'pt-BR'
+          )} ha</p>
+          ${
+            prodPlan
+              ? `<p class="text-xs text-gray-500 mt-2">Produtividade planejada: ${prodPlan.toLocaleString(
+                  'pt-BR'
+                )} sc/ha</p>`
+              : ''
+          }
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <p class="text-xs text-gray-500">Produção</p>
+          ${
+            prodPlanTotal
+              ? `<p class="text-sm">Planejada: <span class="font-semibold">${prodPlanTotal.toLocaleString(
+                  'pt-BR'
+                )} sc</span></p>`
+              : ''
+          }
+          ${
+            prodReal
+              ? `<p class="text-sm mt-1">Realizada: <span class="font-semibold">${prodReal.toLocaleString(
+                  'pt-BR'
+                )} sc</span></p>`
+              : "<p class='text-sm mt-1 text-gray-500'>Produção realizada ainda não informada.</p>"
+          }
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-4">
+        Para detalhes mais completos (custos, serviços e relatórios), acesse o painel principal da plataforma Cultura de Gestão.
+      </p>
+    `;
+  } catch (e) {
+    console.error(e);
+    dashContent.innerHTML =
+      "<p class='text-sm text-red-600'>Erro ao carregar os dados da sua produção.</p>";
+  }
+}
+
 
       /* ====== CLIMA (formato antigo + resumo) ====== */
       async function getWeather(lat, lon, origemTexto) {

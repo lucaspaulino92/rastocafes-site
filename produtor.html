@@ -259,7 +259,7 @@
         }
       });
 
-     /* ====== DASHBOARD DO PRODUTOR ====== */
+     /* ====== DASHBOARD DO PRODUTOR (filtrado por usuário) ====== */
 async function loadProducerDashboard() {
   const dash = $("#producerDashboard");
   const dashContent = $("#producerDashboardContent");
@@ -270,24 +270,27 @@ async function loadProducerDashboard() {
     "<div class='flex items-center gap-2 text-sm text-gray-600'><span class='loader'></span> Carregando dados da sua fazenda...</div>";
 
   try {
-    // garante que há sessão (usuário logado)
-    const { data: sessionData } = await sb.auth.getSession();
-    const session = sessionData?.session;
-    if (!session) {
+    // garante que há usuário logado
+    const { data: userData, error: userError } = await sb.auth.getUser();
+    if (userError) {
+      console.error(userError);
+    }
+    const user = userData?.user;
+    if (!user) {
       dashContent.innerHTML =
         "<p class='text-sm text-gray-500'>Faça login para ver o resumo da sua produção.</p>";
       return;
     }
 
-    // AQUI É O PONTO IMPORTANTE:
-    // NÃO vamos filtrar por user_id manualmente.
-    // O RLS das tabelas (fazendas, safras, talhoes, relatórios) é que vai decidir
-    // quais linhas aparecem para esse usuário logado.
+    // AGORA É O PONTO IMPORTANTE:
+    // filtramos pela coluna user_id da view, que é montada a partir dos vínculos
+    // (safras.user_id / fazendas.produtor_id / fazendas.user_id, conforme sua view).
     const { data, error } = await sb
       .from("view_resumo_produtor")
       .select(
         "fazenda_id,fazenda_nome,safra_id,safra_nome,area_total,produtividade_planejada,producao_planejada,producao_realizada,ultimo_atualizacao"
       )
+      .eq("user_id", user.id)
       .order("fazenda_nome", { ascending: true })
       .order("safra_nome", { ascending: true });
 
@@ -314,7 +317,7 @@ async function loadProducerDashboard() {
       return;
     }
 
-    // agregados simples
+    // agregados simples só com os dados desse usuário
     const totalArea = data.reduce(
       (acc, row) => acc + Number(row.area_total || 0),
       0

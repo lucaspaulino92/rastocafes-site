@@ -4,12 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Área do Produtor - Rasto Cafés</title>
+
+    <!-- Tailwind -->
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
       rel="stylesheet"
     />
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- (Opcional) favicon simples para tirar o 404 -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+
     <style>
       body {
         font-family: "Segoe UI", sans-serif;
@@ -35,13 +45,6 @@
       }
       .card:hover {
         transform: translateY(-4px);
-      }
-      .scrollbar-thin::-webkit-scrollbar {
-        height: 6px;
-      }
-      .scrollbar-thin::-webkit-scrollbar-thumb {
-        background-color: #d1d5db;
-        border-radius: 999px;
       }
       table {
         width: 100%;
@@ -180,21 +183,22 @@
 
     <script>
       const SUPABASE_URL = "https://spgfbcmzlbuaznegjreu.supabase.co";
-      const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwZ2ZiY216bGJ1YXpuZWdqcmV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTUyNTksImV4cCI6MjA1OTk5MTI1OX0.lq9_YHkrGVChYzkYL3uvr6CZ3pN2RBa0MJQp0wz3-X0"; // COLE AQUI a anon key COMPLETA
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwZ2ZiY216bGJ1YXpuZWdqcmV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MTUyNTksImV4cCI6MjA1OTk5MTI1OX0.lq9_YHkrGVChYzkYL3uvr6CZ3pN2RBa0MJQp0wz3-X0"; // <- COLE aqui a anon key completa
 
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
       const $ = (s) => document.querySelector(s);
       const fetchJSON = (u) => fetch(u).then((r) => r.json());
 
+      let resumoRows = [];
+      let produtorChart = null;
+
       /* ========== LOGIN / LOGOUT / SESSÃO ========== */
 
-      // abrir/fechar modal
       $("#loginBtn").onclick = () =>
         $("#loginModal").classList.remove("hidden");
       $("#closeModal").onclick = () =>
         $("#loginModal").classList.add("hidden");
 
-      // login
       $("#submitLogin").onclick = async () => {
         $("#loginError").classList.add("hidden");
 
@@ -220,7 +224,8 @@
 
         if (error) {
           console.error(error);
-          $("#loginError").textContent = "Credenciais inválidas ou erro no login.";
+          $("#loginError").textContent =
+            "Credenciais inválidas ou erro no login.";
           $("#loginError").classList.remove("hidden");
           return;
         }
@@ -232,7 +237,6 @@
         loadProducerDashboard();
       };
 
-      // logout
       $("#logoutBtn").onclick = async () => {
         await sb.auth.signOut();
         $("#logoutBtn").classList.add("hidden");
@@ -247,7 +251,6 @@
         }
       };
 
-      // verifica sessão ao carregar
       sb.auth.getSession().then(({ data: { session } }) => {
         if (session) {
           $("#loginBtn").classList.add("hidden");
@@ -277,13 +280,11 @@
           }
 
           const { data, error } = await sb
-            .from("view_resumo_produtor") // ajuste se usar outro nome
+            .from("view_resumo_produtor")
             .select(
-              "fazenda_nome,safra_nome,area_total,produtividade_planejada,producao_planejada,producao_realizada,ultimo_atualizacao"
+              "fazenda_id,fazenda_nome,safra_id,safra_nome,area_total,produtividade_planejada,producao_planejada,producao_realizada,ultimo_atualizacao"
             )
-            .eq("user_id", user.id)
-            .limit(1)
-            .single();
+            .eq("user_id", user.id);
 
           if (error) {
             console.error(error);
@@ -292,68 +293,202 @@
                 Não foi possível carregar automaticamente o resumo da sua produção.
               </p>
               <p class='text-xs text-gray-500'>
-                Peça ao seu consultor para conferir se a view <code>view_resumo_produtor</code> está criada e vinculada ao seu usuário.
+                Verifique se a view <code>view_resumo_produtor</code> foi criada corretamente no Supabase.
               </p>
             `;
             return;
           }
 
-          const fazendaNome = data.fazenda_nome || "Minha fazenda";
-          const safraNome = data.safra_nome || "Safra atual";
-          const areaTotal = data.area_total ?? 0;
-          const prodPlan = data.produtividade_planejada ?? null;
-          const prodReal = data.producao_realizada ?? null;
-          const prodPlanTotal = data.producao_planejada ?? null;
-          const ultimo = data.ultimo_atualizacao
-            ? new Date(data.ultimo_atualizacao).toLocaleDateString("pt-BR")
-            : "-";
+          if (!data || !data.length) {
+            dashContent.innerHTML = `
+              <p class='text-sm text-gray-500'>
+                Não foram encontradas safras vinculadas ao seu usuário.
+                Confirme com o consultor se suas fazendas e safras estão associadas ao seu login.
+              </p>
+            `;
+            return;
+          }
+
+          resumoRows = data;
 
           dashContent.innerHTML = `
-            <div class="grid md:grid-cols-3 gap-4">
+            <div class="mb-4 grid md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Fazenda</label>
+                <select id="fazendaSelect" class="w-full border rounded p-2 text-sm"></select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Safra</label>
+                <select id="safraSelect" class="w-full border rounded p-2 text-sm"></select>
+              </div>
+              <div class="flex justify-end">
+                <a
+                  href="painel.html"
+                  class="inline-flex items-center px-3 py-2 rounded text-xs font-semibold bg-yellow-600 text-white shadow"
+                >
+                  Abrir painel completo
+                </a>
+              </div>
+            </div>
+
+            <div id="cardsResumo" class="grid md:grid-cols-3 gap-4 mb-6">
               <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
-                <p class="text-xs text-gray-500">Fazenda</p>
-                <p class="text-sm font-semibold">${fazendaNome}</p>
-                <p class="text-xs text-gray-500 mt-1">Safra: ${safraNome}</p>
-                <p class="text-xs text-gray-500 mt-2">Última atualização: ${ultimo}</p>
+                <p class="text-xs text-gray-500">Fazenda / Safra</p>
+                <p class="text-sm font-semibold" id="cardFazendaSafra">--</p>
+                <p class="text-xs text-gray-500 mt-1">Última atualização: <span id="cardUltimo">--</span></p>
               </div>
 
               <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <p class="text-xs text-gray-500">Área total</p>
-                <p class="text-xl font-semibold">${areaTotal.toLocaleString(
-                  "pt-BR"
-                )} ha</p>
-                ${
-                  prodPlan
-                    ? `<p class="text-xs text-gray-500 mt-2">Produtividade planejada: ${prodPlan.toLocaleString(
-                        "pt-BR"
-                      )} sc/ha</p>`
-                    : ""
-                }
+                <p class="text-xl font-semibold" id="cardArea">-- ha</p>
+                <p class="text-xs text-gray-500 mt-2">Produtividade planejada: <span id="cardProdPlan">-- sc/ha</span></p>
               </div>
 
               <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <p class="text-xs text-gray-500">Produção</p>
-                ${
-                  prodPlanTotal
-                    ? `<p class="text-sm">Planejada: <span class="font-semibold">${prodPlanTotal.toLocaleString(
-                        "pt-BR"
-                      )} sc</span></p>`
-                    : ""
-                }
-                ${
-                  prodReal
-                    ? `<p class="text-sm mt-1">Realizada: <span class="font-semibold">${prodReal.toLocaleString(
-                        "pt-BR"
-                      )} sc</span></p>`
-                    : "<p class='text-sm mt-1 text-gray-500'>Produção realizada ainda não informada.</p>"
-                }
+                <p class="text-sm">Planejada: <span class="font-semibold" id="cardProdPlanTotal">-- sc</span></p>
+                <p class="text-sm mt-1">Realizada: <span class="font-semibold" id="cardProdReal">-- sc</span></p>
               </div>
             </div>
 
-            <p class="text-xs text-gray-500 mt-4">
-              Para detalhes mais completos (custos, serviços e relatórios), acesse o painel principal da plataforma Cultura de Gestão.
-            </p>
+            <div class="mt-2">
+              <h3 class="text-sm font-semibold mb-2">
+                Produção planejada x realizada (sacas)
+              </h3>
+              <canvas id="produtorChart" height="80"></canvas>
+            </div>
           `;
+
+          const fazendaSelect = $("#fazendaSelect");
+          const safraSelect = $("#safraSelect");
+
+          const fazendasMap = new Map();
+          resumoRows.forEach((row) => {
+            if (!fazendasMap.has(row.fazenda_id)) {
+              fazendasMap.set(row.fazenda_id, row.fazenda_nome || "Fazenda");
+            }
+          });
+
+          fazendasMap.forEach((nome, id) => {
+            const opt = document.createElement("option");
+            opt.value = id;
+            opt.textContent = nome;
+            fazendaSelect.appendChild(opt);
+          });
+
+          function atualizarSafras() {
+            const fazendaId = fazendaSelect.value;
+            safraSelect.innerHTML = "";
+            const safraSet = new Map();
+            resumoRows
+              .filter((r) => r.fazenda_id === fazendaId)
+              .forEach((r) => {
+                if (!safraSet.has(r.safra_id)) {
+                  safraSet.set(r.safra_id, r.safra_nome || "Safra");
+                }
+              });
+
+            safraSet.forEach((nome, id) => {
+              const opt = document.createElement("option");
+              opt.value = id;
+              opt.textContent = nome;
+              safraSelect.appendChild(opt);
+            });
+          }
+
+          function atualizarResumo() {
+            const fazendaId = fazendaSelect.value;
+            const safraId = safraSelect.value;
+
+            const linha =
+              resumoRows.find(
+                (r) => r.fazenda_id === fazendaId && r.safra_id === safraId
+              ) ||
+              resumoRows.find((r) => r.fazenda_id === fazendaId) ||
+              resumoRows[0];
+
+            if (!linha) return;
+
+            const fazendaNome = linha.fazenda_nome || "Minha fazenda";
+            const safraNome = linha.safra_nome || "Safra atual";
+            const areaTotal = linha.area_total ?? 0;
+            const prodPlanHa = linha.produtividade_planejada ?? null;
+            const prodPlanTotal = linha.producao_planejada ?? null;
+            const prodReal = linha.producao_realizada ?? null;
+            const ultimo = linha.ultimo_atualizacao
+              ? new Date(linha.ultimo_atualizacao).toLocaleDateString("pt-BR")
+              : "-";
+
+            $("#cardFazendaSafra").textContent = `${fazendaNome} · ${safraNome}`;
+            $("#cardUltimo").textContent = ultimo;
+            $("#cardArea").textContent = `${areaTotal.toLocaleString("pt-BR", {
+              maximumFractionDigits: 2,
+            })} ha`;
+            $("#cardProdPlan").textContent =
+              prodPlanHa && prodPlanHa > 0
+                ? `${prodPlanHa.toLocaleString("pt-BR", {
+                    maximumFractionDigits: 1,
+                  })} sc/ha`
+                : "-- sc/ha";
+            $("#cardProdPlanTotal").textContent =
+              prodPlanTotal && prodPlanTotal > 0
+                ? `${prodPlanTotal.toLocaleString("pt-BR", {
+                    maximumFractionDigits: 0,
+                  })} sc`
+                : "-- sc";
+            $("#cardProdReal").textContent =
+              prodReal && prodReal > 0
+                ? `${prodReal.toLocaleString("pt-BR", {
+                    maximumFractionDigits: 0,
+                  })} sc`
+                : "-- sc";
+
+            const ctx = document.getElementById("produtorChart");
+            if (!ctx) return;
+
+            if (produtorChart) {
+              produtorChart.destroy();
+            }
+
+            produtorChart = new Chart(ctx, {
+              type: "bar",
+              data: {
+                labels: ["Produção (sc)"],
+                datasets: [
+                  {
+                    label: "Planejada",
+                    data: [prodPlanTotal || 0],
+                    backgroundColor: "rgba(59,130,246,0.7)",
+                  },
+                  {
+                    label: "Realizada",
+                    data: [prodReal || 0],
+                    backgroundColor: "rgba(245,158,11,0.7)",
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: "top" },
+                },
+                scales: {
+                  y: { beginAtZero: true },
+                },
+              },
+            });
+          }
+
+          fazendaSelect.onchange = () => {
+            atualizarSafras();
+            atualizarResumo();
+          };
+          safraSelect.onchange = () => {
+            atualizarResumo();
+          };
+
+          atualizarSafras();
+          atualizarResumo();
         } catch (e) {
           console.error(e);
           dashContent.innerHTML =
@@ -361,7 +496,7 @@
         }
       }
 
-      /* ========== CLIMA (formato antigo + resumo) ========== */
+      /* ========== CLIMA ========== */
 
       async function getWeather(lat, lon, origemTexto) {
         const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
@@ -614,8 +749,6 @@
             "soja",
             "trigo",
             "commodit",
-            "tecnologia",
-            "IA",
           ];
 
           const keywordFilter = (list) =>

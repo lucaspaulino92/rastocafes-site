@@ -43,6 +43,19 @@
         background-color: #d1d5db;
         border-radius: 999px;
       }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      th {
+        background: #f9fafb;
+      }
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
@@ -167,18 +180,10 @@
 
     <script>
       const SUPABASE_URL = "https://spgfbcmzlbuaznegjreu.supabase.co";
-      const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY_HERE"; // substitua pela sua chave anon
+      const SUPABASE_ANON = "eyJhbGciOiJIUz..."; // substitua pela sua chave anon completa
       const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
       const $ = (s) => document.querySelector(s);
-
-      async function fetchJSON(u) {
-        const r = await fetch(u);
-        if (!r.ok) {
-          throw new Error("HTTP " + r.status);
-        }
-        return r.json();
-      }
+      const fetchJSON = (u) => fetch(u).then((r) => r.json());
 
       /* ====== LOGIN / LOGOUT ====== */
       $("#loginBtn").onclick = () =>
@@ -236,159 +241,146 @@
         }
       });
 
-      /* ====== CLIMA ====== */
-      async function loadWeatherByCoords(lat, lon, origemTexto) {
+      /* ====== CLIMA (formato antigo + resumo) ====== */
+      async function getWeather(lat, lon, origemTexto) {
         const api = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=weathercode,temperature_2m_min,temperature_2m_max&forecast_days=7&timezone=America%2FSao_Paulo`;
 
         try {
           const data = await fetchJSON(api);
-
-          if (!data || !data.current_weather) {
-            $("#weather").innerHTML =
-              "<p>Não foi possível obter a previsão do tempo neste momento.</p>";
-            $("#weather-loading")?.remove();
-            return;
-          }
-
-          const cw = data.current_weather;
-
           const codes = {
-            0: "Céu limpo",
-            1: "Principalmente claro",
-            2: "Parcialmente nublado",
-            3: "Nublado",
-            45: "Neblina",
-            48: "Neblina gelada",
-            51: "Chuvisco leve",
-            53: "Chuvisco moderado",
-            55: "Chuvisco intenso",
-            56: "Chuvisco gelado leve",
-            57: "Chuvisco gelado forte",
-            61: "Chuva leve",
-            63: "Chuva moderada",
-            65: "Chuva forte",
-            66: "Chuva gelada leve",
-            67: "Chuva gelada forte",
-            71: "Neve leve",
-            73: "Neve moderada",
-            75: "Neve forte",
-            80: "Pancadas leves",
-            81: "Pancadas moderadas",
-            82: "Pancadas fortes",
-            95: "Trovoadas",
-            96: "Trovoadas com granizo leve",
-            99: "Trovoadas com granizo forte",
+            0: "☀️ Céu limpo",
+            1: "🌤️ Principalmente claro",
+            2: "⛅ Parcialmente nublado",
+            3: "☁️ Nublado",
+            45: "🌫️ Neblina",
+            48: "🌫️ Neblina gelada",
+            51: "🌦️ Chuvisco leve",
+            53: "🌦️ Chuvisco moderado",
+            55: "🌧️ Chuvisco intenso",
+            56: "🌧️ Chuvisco gelado leve",
+            57: "🌧️ Chuvisco gelado forte",
+            61: "🌧️ Chuva leve",
+            63: "🌧️ Chuva moderada",
+            65: "🌧️ Chuva forte",
+            66: "🌨️ Chuva gelada leve",
+            67: "🌨️ Chuva gelada forte",
+            71: "❄️ Neve leve",
+            73: "❄️ Neve moderada",
+            75: "❄️ Neve forte",
+            80: "🌦️ Pancadas leves",
+            81: "🌦️ Pancadas moderadas",
+            82: "🌧️ Pancadas fortes",
+            95: "⛈️ Trovoada",
+            96: "⛈️ Trovoada com granizo leve",
+            99: "⛈️ Trovoada com granizo forte",
           };
 
-          const currentCond = codes[cw.weathercode] || "Condição indefinida";
-
-          if (!data.daily || !Array.isArray(data.daily.time)) {
-            $("#weather").innerHTML = `
-              <div>
-                <p class="text-sm text-gray-600">Agora na sua região (${origemTexto})</p>
-                <p class="text-4xl font-semibold">${cw.temperature.toFixed(
-                  0
-                )}°C</p>
-                <p class="text-base">${currentCond}</p>
-                <p class="text-xs text-gray-500 mt-1">
-                  Atualizado: ${new Date(cw.time).toLocaleTimeString("pt-BR")}
-                </p>
-                <p class="mt-4 text-sm text-gray-700 bg-yellow-50 border border-yellow-100 rounded-lg p-3">
-                  Não foi possível carregar os próximos dias, mas você já tem a condição atual para planejar as atividades do dia.
-                </p>
-              </div>
-            `;
-            $("#weather-loading")?.remove();
-            return;
-          }
-
-          const daily = data.daily;
+          const cw = data.current_weather;
+          const now =
+            `<p class='text-xl'><strong>${cw.temperature.toFixed(
+              0
+            )}°C</strong> | ${
+              codes[cw.weathercode] || "--"
+            }</p>` +
+            `<p class='text-xs text-gray-600'>Agora na sua região (${origemTexto}) · Atualizado: ${new Date(
+              cw.time
+            ).toLocaleTimeString("pt-BR")}</p>`;
 
           const labels = [];
           const mins = [];
           const maxs = [];
-          const dayCards = [];
 
           let minWeek = Infinity;
           let maxWeek = -Infinity;
           let rainyDays = 0;
-          let hotDays = 0;
-          let coldDays = 0;
 
           const rainyCodes = [
             51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99,
           ];
 
-          daily.time.forEach((d, i) => {
-            const date = new Date(d);
-            const weekday = date.toLocaleDateString("pt-BR", {
-              weekday: "short",
-            });
-            const dayMonth = date.toLocaleDateString("pt-BR", {
-              day: "2-digit",
-              month: "2-digit",
-            });
+          const rows = data.daily.time
+            .map((d, i) => {
+              const date = new Date(d);
+              const dia = date.toLocaleDateString("pt-BR", {
+                weekday: "short",
+                day: "2-digit",
+                month: "2-digit",
+              });
+              const code = data.daily.weathercode[i];
+              const cond = codes[code] || "--";
+              const min = data.daily.temperature_2m_min[i];
+              const max = data.daily.temperature_2m_max[i];
 
-            const code = daily.weathercode?.[i];
-            const min = daily.temperature_2m_min?.[i];
-            const max = daily.temperature_2m_max?.[i];
+              labels.push(
+                date.toLocaleDateString("pt-BR", { weekday: "short" })
+              );
+              mins.push(min);
+              maxs.push(max);
 
-            if (min == null || max == null) return;
+              if (min < minWeek) minWeek = min;
+              if (max > maxWeek) maxWeek = max;
+              if (rainyCodes.includes(code)) rainyDays++;
 
-            labels.push(weekday);
-            mins.push(min);
-            maxs.push(max);
+              return `<tr>
+                <td class='py-1 pr-4'>${dia}</td>
+                <td class='py-1'>${cond}</td>
+                <td class='py-1'>${min.toFixed(0)}°C / ${max.toFixed(
+                0
+              )}°C</td>
+              </tr>`;
+            })
+            .join("");
 
-            if (min < minWeek) minWeek = min;
-            if (max > maxWeek) maxWeek = max;
+          let rainSentence = "";
+          if (rainyDays >= 4) {
+            rainSentence =
+              "Vários dias com chuva, favorecendo umidade do solo, mas exigindo cuidado com colheita e pulverizações.";
+          } else if (rainyDays >= 2) {
+            rainSentence =
+              "Alguns dias com chuva intercalados com tempo firme, permitindo organizar bem as operações.";
+          } else {
+            rainSentence =
+              "Poucos dias com chuva, exigindo atenção à umidade do solo e à planta.";
+          }
 
-            if (rainyCodes.includes(code)) rainyDays++;
-            if (max >= 30) hotDays++;
-            if (max <= 22) coldDays++;
-
-            const condText = codes[code] || "Condição indefinida";
-
-            dayCards.push(`
-              <div class="min-w-[90px] bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-center text-xs">
-                <div class="font-semibold mb-1">${weekday}</div>
-                <div class="text-[11px] text-gray-500 mb-1">${dayMonth}</div>
-                <div class="text-[11px] mb-1">${condText}</div>
-                <div class="font-medium">${min.toFixed(
+          const rangeSentence =
+            isFinite(minWeek) && isFinite(maxWeek)
+              ? `As temperaturas da semana devem variar em torno de ${minWeek.toFixed(
                   0
-                )}°C / ${max.toFixed(0)}°C</div>
-              </div>
-            `);
-          });
-
-          $("#weather").innerHTML = `
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <p class="text-sm text-gray-600">Agora na sua região (${origemTexto})</p>
-                <p class="text-4xl font-semibold">${cw.temperature.toFixed(
+                )}°C a ${maxWeek.toFixed(
                   0
-                )}°C</p>
-                <p class="text-base">${currentCond}</p>
-                <p class="text-xs text-gray-500 mt-1">
-                  Atualizado: ${new Date(cw.time).toLocaleTimeString("pt-BR")}
-                </p>
-              </div>
-              <div class="flex-1">
-                <p class="text-xs text-gray-500 mb-1">
-                  Próximos 7 dias (passe o dedo para o lado)
-                </p>
-                <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-                  ${dayCards.join("")}
-                </div>
-              </div>
-            </div>
-            <p
-              id="weatherSummary"
-              class="mt-4 text-sm text-gray-700 bg-yellow-50 border border-yellow-100 rounded-lg p-3"
-            ></p>
+                )}°C na sua região, sem grandes extremos.`
+              : "";
+
+          const adviceSentence =
+            " Planeje colheita, tratos culturais e aplicações aproveitando os dias mais firmes.";
+
+          const resumo =
+            rangeSentence && rainSentence
+              ? `${rangeSentence} ${rainSentence} ${adviceSentence}`
+              : "";
+
+          const tabelaHTML = `
+            <table class='text-sm mt-4 w-full'>
+              <thead>
+                <tr>
+                  <th class='text-left pb-1 border-b'>Dia</th>
+                  <th class='text-left pb-1 border-b'>Condição</th>
+                  <th class='text-left pb-1 border-b'>Temperaturas</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
           `;
 
+          const resumoHTML = resumo
+            ? `<p class="mt-4 text-sm text-gray-700 bg-yellow-50 border border-yellow-100 rounded-lg p-3">${resumo}</p>`
+            : "";
+
+          $("#weather").innerHTML = now + tabelaHTML + resumoHTML;
+
           const ctx = $("#weatherChart");
-          if (ctx && labels.length && mins.length && maxs.length) {
+          if (ctx) {
             new Chart(ctx, {
               type: "line",
               data: {
@@ -414,44 +406,6 @@
               },
             });
           }
-
-          let tempSentence = "";
-          if (hotDays >= 4) {
-            tempSentence =
-              "A semana tende a ser mais quente, com vários dias passando de 30°C.";
-          } else if (coldDays >= 4) {
-            tempSentence =
-              "A semana tende a ser mais fresca, com máximas em torno de 22°C ou menos em vários dias.";
-          } else {
-            tempSentence =
-              "A temperatura deve ficar moderada, sem extremos muito fortes de calor ou frio.";
-          }
-
-          let rainSentence = "";
-          if (rainyDays >= 4) {
-            rainSentence =
-              "Há previsão de chuva em boa parte dos dias, o que ajuda na umidade do solo, mas pode atrapalhar operações de colheita e pulverização.";
-          } else if (rainyDays >= 2) {
-            rainSentence =
-              "Alguns dias terão chuva, alternando com períodos de tempo mais firme.";
-          } else {
-            rainSentence =
-              "A previsão indica poucos dias com chuva, exigindo atenção à umidade do solo.";
-          }
-
-          const rangeSentence =
-            isFinite(minWeek) && isFinite(maxWeek)
-              ? `As temperaturas devem variar, em média, entre cerca de ${minWeek.toFixed(
-                  0
-                )}°C e ${maxWeek.toFixed(
-                  0
-                )}°C ao longo da semana na sua região.`
-              : "";
-
-          const adviceSentence =
-            " Use essas informações para planejar colheita, tratos culturais e aplicações, priorizando janelas de tempo firme.";
-
-          $("#weatherSummary").textContent = `${rangeSentence} ${tempSentence} ${rainSentence} ${adviceSentence}`;
         } catch (e) {
           console.error("Erro ao carregar clima:", e);
           $("#weather").innerHTML =
@@ -461,35 +415,25 @@
         $("#weather-loading")?.remove();
       }
 
-      async function loadWeather() {
+      function loadWeather() {
         if (!navigator.geolocation) {
-          await loadWeatherByCoords(
-            -20.78,
-            -47.1,
-            "região de São Tomás de Aquino - MG"
-          );
+          // fallback direto para sua região base
+          getWeather(-20.78, -47.1, "região de São Tomás de Aquino - MG");
           return;
         }
 
         navigator.geolocation.getCurrentPosition(
-          async ({ coords }) => {
-            await loadWeatherByCoords(
-              coords.latitude,
-              coords.longitude,
-              "perto de você"
-            );
+          ({ coords }) => {
+            getWeather(coords.latitude, coords.longitude, "perto de você");
           },
-          async () => {
-            await loadWeatherByCoords(
-              -20.78,
-              -47.1,
-              "região de São Tomás de Aquino - MG"
-            );
+          () => {
+            // se o usuário negar ou der erro, usa região padrão
+            getWeather(-20.78, -47.1, "região de São Tomás de Aquino - MG");
           }
         );
       }
 
-      /* ====== NOTÍCIAS DO AGRO ====== */
+      /* ====== NOTÍCIAS DO AGRO (mais atuais) ====== */
       async function loadNews() {
         try {
           const feeds = [
@@ -510,6 +454,14 @@
 
           let items = responses.flatMap((r) => r.items || []);
 
+          if (!items.length) {
+            $("#news").innerHTML =
+              "<p>Não foi possível carregar notícias do agro agora.</p>";
+            $("#news-loading")?.remove();
+            return;
+          }
+
+          // Ordena por data (mais recente primeiro)
           items = items.sort((a, b) => {
             const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
             const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
@@ -520,6 +472,7 @@
           const weekMs = 7 * 24 * 60 * 60 * 1000;
           const weekAgo = now - weekMs;
 
+          // últimos 7 dias
           let recent = items.filter((i) => {
             if (!i.pubDate) return false;
             const t = new Date(i.pubDate).getTime();
@@ -559,36 +512,18 @@
           if (filtered.length < 6) {
             filtered = recent;
           }
-
           if (filtered.length < 6) {
             filtered = keywordFilter(items);
           }
 
           const finalItems = (filtered.length ? filtered : items).slice(0, 10);
 
-          if (!finalItems.length) {
-            $("#news").innerHTML =
-              "<p>Não foi possível carregar notícias do agro agora.</p>";
-            $("#news-loading")?.remove();
-            return;
-          }
-
           const html = finalItems
             .map((i) => {
-              let host = "";
               let dateStr = "";
-
-              try {
-                const url = new URL(i.link);
-                host = url.hostname.replace("www.", "");
-              } catch (e) {
-                host = "";
-              }
-
               if (i.pubDate) {
                 dateStr = new Date(i.pubDate).toLocaleDateString("pt-BR");
               }
-
               return `
                 <a
                   href="${i.link}"
@@ -599,9 +534,7 @@
                     • ${i.title}
                   </span>
                   <span class="block text-[11px] text-gray-500">
-                    ${host ? host : ""}${host && dateStr ? " • " : ""}${
-                dateStr || ""
-              }
+                    ${dateStr}
                   </span>
                 </a>
               `;

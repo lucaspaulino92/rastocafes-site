@@ -36,8 +36,62 @@
     }
 
     @keyframes marquee {
-      0% { transform: translateX(0%); }
+      0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
+    }
+
+    .marquee-track {
+      animation: marquee 30s linear infinite;
+    }
+
+    .marquee-wrapper:hover .marquee-track {
+      animation-play-state: paused;
+    }
+
+    .sponsor-box {
+      width: 180px;
+      height: 110px;
+      flex: 0 0 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid #eeeeee;
+      box-sizing: border-box;
+    }
+
+    .sponsor-box img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    @media (max-width: 640px) {
+      .section-bg {
+        padding: 1.25rem;
+      }
+
+      .sponsor-box {
+        width: 145px;
+        height: 90px;
+        flex-basis: 145px;
+        padding: 10px;
+      }
+
+      .marquee-track {
+        animation-duration: 24s;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .marquee-track {
+        animation: none;
+      }
     }
   </style>
 </head>
@@ -307,28 +361,85 @@
   <section class="mx-auto max-w-6xl px-4 pb-16">
     <div class="section-bg">
       <h2 class="text-2xl md:text-3xl font-bold text-center">Apoiadores e Parceiros</h2>
-      <p class="mt-2 text-center">Quer sua marca aqui? Entre em contato pelos canais oficiais.</p>
 
-      <div class="mt-6 overflow-hidden relative">
-        <div class="flex animate-[marquee_20s_linear_infinite] space-x-6 w-max">
-          <img src="logo1.png" alt="Logo 1" class="h-16 w-auto object-contain" />
-          <img src="logo2.png" alt="Logo 2" class="h-16 w-auto object-contain" />
-          <img src="logo3.png" alt="Logo 3" class="h-16 w-auto object-contain" />
-          <img src="logo4.png" alt="Logo 4" class="h-16 w-auto object-contain" />
-          <img src="logo5.png" alt="Logo 5" class="h-16 w-auto object-contain" />
-          <img src="logo6.png" alt="Logo 6" class="h-16 w-auto object-contain" />
+      <p class="mt-2 text-center">
+        Empresas e instituições que apoiam o Concurso Municipal de Qualidade de Cafés.
+      </p>
 
-          <!-- Lista duplicada para o loop infinito -->
-          <img src="logo1.png" alt="Logo 1" class="h-16 w-auto object-contain" />
-          <img src="logo2.png" alt="Logo 2" class="h-16 w-auto object-contain" />
-          <img src="logo3.png" alt="Logo 3" class="h-16 w-auto object-contain" />
-          <img src="logo4.png" alt="Logo 4" class="h-16 w-auto object-contain" />
-          <img src="logo5.png" alt="Logo 5" class="h-16 w-auto object-contain" />
-          <img src="logo6.png" alt="Logo 6" class="h-16 w-auto object-contain" />
-        </div>
+      <div class="marquee-wrapper mt-8 overflow-hidden relative">
+        <div
+          id="patrocinadores-track"
+          class="marquee-track flex items-center gap-8 w-max"
+        ></div>
       </div>
+
+      <p class="mt-6 text-center text-sm text-neutral-500">
+        Quer sua marca aqui? Entre em contato pelos canais oficiais.
+      </p>
     </div>
   </section>
+
+
+  <!-- Configuração dos patrocinadores -->
+  <script>
+    /*
+      COMO ADICIONAR NOVOS PATROCINADORES
+
+      1. Coloque o arquivo da logo na mesma pasta deste HTML.
+         Exemplo:
+         logo7.png
+         logo8.png
+         logo9.png
+
+      2. Acrescente somente uma linha na lista abaixo:
+         { arquivo: "logo7.png", nome: "Nome da Empresa" },
+
+      O sistema duplica automaticamente as logos para o carrossel infinito.
+    */
+
+    const patrocinadores = [
+      { arquivo: "logo1.png", nome: "Patrocinador 1" },
+      { arquivo: "logo2.png", nome: "Patrocinador 2" },
+      { arquivo: "logo3.png", nome: "Patrocinador 3" },
+      { arquivo: "logo4.png", nome: "Patrocinador 4" },
+      { arquivo: "logo5.png", nome: "Patrocinador 5" },
+      { arquivo: "logo6.png", nome: "Patrocinador 6" }
+
+      /*
+      Para adicionar:
+
+      ,{ arquivo: "logo7.png", nome: "Empresa 7" }
+      ,{ arquivo: "logo8.png", nome: "Empresa 8" }
+      ,{ arquivo: "logo9.png", nome: "Empresa 9" }
+      */
+    ];
+
+    const track = document.getElementById("patrocinadores-track");
+
+    function criarLogo(patrocinador) {
+      const box = document.createElement("div");
+      box.className = "sponsor-box";
+
+      const imagem = document.createElement("img");
+      imagem.src = patrocinador.arquivo;
+      imagem.alt = patrocinador.nome;
+      imagem.loading = "lazy";
+
+      imagem.onerror = function () {
+        box.style.display = "none";
+      };
+
+      box.appendChild(imagem);
+      return box;
+    }
+
+    for (let repeticao = 0; repeticao < 2; repeticao++) {
+      patrocinadores.forEach((patrocinador) => {
+        track.appendChild(criarLogo(patrocinador));
+      });
+    }
+  </script>
+
 
   <!-- Rodapé -->
   <footer class="border-t bg-white">
